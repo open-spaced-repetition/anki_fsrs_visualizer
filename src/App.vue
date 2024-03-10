@@ -30,6 +30,10 @@
       <input id="mode-realDifficulty" type="radio" value="realDifficulty" v-model="mode" />
       <label for="mode-realDifficulty">Difficulty</label>
     </div>
+    <div>
+      <input id="animation" type="checkbox" v-model="animation" />
+      <label for="animation">Animation</label>
+    </div>
   </div>
   <div style="font-size: 75%; width: 100%;">
     <div v-for="(slider, index) in sliders" class="slider">
@@ -104,7 +108,7 @@ textarea {
 </style>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
   Chart as ChartJS,
   Title,
@@ -121,13 +125,22 @@ import { Card, FsrsCalculator } from './fsrsCalculator';
 import { sliders } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import ChartDataLabels, { type Context } from 'chartjs-plugin-datalabels';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { createOptions, MyLine, type MyData } from './chartOptions.js';
 import { Line } from 'vue-chartjs';
 
 ChartJS.register(Title, Tooltip, Legend, PointElement, LineElement, CategoryScale, LinearScale, Colors, zoomPlugin, ChartDataLabels);
 
 const mode = ref<keyof Card>("interval");
+const animation = ref(true);
+
+//can't disable animation using reactive options, so using watch
+
+watch(animation, a => {
+  if (typeof options.animation == "object") {
+    options.animation.duration = (a ? 500 : 0);
+  }
+});
 
 const options = createOptions();
 

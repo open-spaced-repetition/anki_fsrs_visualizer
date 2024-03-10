@@ -26,6 +26,9 @@ export function createOptions(): ChartOptions<'line'> {
   return {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 500,
+    },
     scales: {
       y: {
         display: true,

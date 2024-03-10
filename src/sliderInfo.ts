@@ -23,3 +23,5 @@ export const sliders: SliderInfo[] = [
     { name: "stability (multiplier for Hard)", min: 0, max: 1 },
     { name: "stability (multiplier for Easy)", min: 1, max: 4 },
 ];
+
+export const desiredRSlider: SliderInfo = { name: "Desired Retention", min: 0.8, max: 0.99 };

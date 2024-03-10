@@ -36,6 +36,26 @@
     </div>
   </div>
   <div style="font-size: 75%; width: 100%;">
+    <!-- TODO: move to slider component -->
+    <div class="slider">
+      <div style="white-space: nowrap; width: 14em">{{ desiredRSlider.name }}</div>
+      <div>
+        <input style="width: 5em;" type="number" step="0.01" v-model="desiredR" :min="desiredRSlider.min"
+          :max="desiredRSlider.max" v-on:change="commit" />
+      </div>
+      <div style="flex: 1; min-width: 10em; display: flex; column-gap: 5px;">
+        <div class="minmax" style="text-align: right;">
+          {{ desiredRSlider.min }}
+        </div>
+        <div style="flex: 1;">
+          <input style="width: 100%;" type="range" step="0.01" v-model="desiredR" :min="desiredRSlider.min"
+            :max="desiredRSlider.max" v-on:change="commit" />
+        </div>
+        <div class="minmax">
+          {{ desiredRSlider.max }}
+        </div>
+      </div>
+    </div>
     <div v-for="(slider, index) in sliders" class="slider">
       <div style="white-space: nowrap; width: 14em">{{ index }}. {{ slider.name }}</div>
       <div>
@@ -122,7 +142,7 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, FsrsCalculator } from './fsrsCalculator';
-import { sliders } from './sliderInfo';
+import { sliders, desiredRSlider } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -175,6 +195,7 @@ const scores_text = computed({
 
 const initial_w = [0.5614, 1.2546, 3.5878, 7.9731, 5.1043, 1.1303, 0.8230, 0.0465, 1.6290, 0.1350, 1.0045, 2.1320, 0.0839, 0.3204, 1.3547, 0.2190, 2.7849];
 const w = ref([...initial_w]);
+const desiredR = ref(0.9);
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(w, { clone: a => [...a] });
 
@@ -184,7 +205,8 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-  const calc = new FsrsCalculator(w.value);
+  console.log(desiredR.value);
+  const calc = new FsrsCalculator(w.value, desiredR.value);
 
   // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
 

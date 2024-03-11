@@ -13,7 +13,6 @@ const zoomOptions: ZoomPluginOptions = {
   zoom: {
     wheel: {
       enabled: true,
-      modifierKey: 'ctrl',
     },
     pinch: {
       enabled: true,

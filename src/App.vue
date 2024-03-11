@@ -205,7 +205,6 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-  console.log(desiredR.value);
   const calc = new FsrsCalculator(w.value, desiredR.value);
 
   // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically

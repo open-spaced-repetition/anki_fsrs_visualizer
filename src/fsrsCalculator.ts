@@ -19,12 +19,14 @@ export class FsrsCalculator {
     }
 
     calcD0(g: number): number {
-        return this.w[4] - this.w[5] * (g - 3.0);
+        let d = this.w[4] - this.w[5] * (g - 3.0);
+        return this.clamp(d, 1, 10);
     }
 
     calcDN(d: number, g: number): number {
         let dn = d - this.w[6] * (g - 3.0);
-        return this.w[7] * this.calcD0(3) + (1.0 - this.w[7]) * dn;
+        let dn2 = this.w[7] * this.calcD0(3) + (1.0 - this.w[7]) * dn;
+        return this.clamp(dn2, 1, 10);
     }
 
     calcRevExp(w: number, r: number): number {
@@ -45,8 +47,12 @@ export class FsrsCalculator {
         return this.w[11] * Math.pow(d, -this.w[12]) * (Math.pow(s + 1.0, this.w[13]) - 1.0) * this.calcRevExp(this.w[14], r);
     }
 
-    calcRD(d: number){
+    calcRD(d: number) {
         return (d - 1.0) / 9.0 * 100.0;
+    }
+
+    clamp(number: number, min: number, max: number) {
+        return Math.max(min, Math.min(number, max));
     }
 
     public step(card: Card, g: number): Card {
@@ -99,7 +105,7 @@ export class Card {
     cumulativeInterval: number;
     score: number;
 
-    public constructor(n: boolean, difficulty: number, realDifficulty: number, stability: number, interval: number, cumulativeInterval:number, score: number) {
+    public constructor(n: boolean, difficulty: number, realDifficulty: number, stability: number, interval: number, cumulativeInterval: number, score: number) {
         this.new = n;
         this.difficulty = difficulty;
         this.realDifficulty = realDifficulty;

@@ -76,6 +76,14 @@
       </div>
     </div>
   </div>
+  <table class="table-dataset">
+    <tr v-for="dataset in data.datasets">
+      <td>{{ dataset.label }}</td>
+      <td v-for="item in dataset.data">
+        {{ item.y.toFixed(2) }}
+      </td>
+    </tr>
+  </table>
   <a href="https://github.com/xiety/anki_fsrs_visualizer" style="font-size: 75%;">Github</a>
 </template>
 <style>
@@ -124,6 +132,19 @@ textarea {
   align-items: center;
   column-gap: 3px;
   flex-wrap: wrap;
+}
+
+.table-dataset {
+  border-collapse: collapse;
+}
+
+.table-dataset tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.table-dataset td {
+  border: 1px solid #ddd;
+  text-align: right;
 }
 </style>
 

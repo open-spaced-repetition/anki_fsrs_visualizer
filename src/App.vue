@@ -11,7 +11,7 @@
     </div>
   </div>
   <div class="whole">
-    <input v-model.lazy="w_text" style="height: 100%; width: 100%; box-sizing: border-box; resize: none;" />
+    <input v-model.lazy="w_text" v-on:change="commit" style="height: 100%; width: 100%; box-sizing: border-box; resize: none;" />
   </div>
   <div style="display: flex; flex-wrap: wrap; gap: 2px; align-items: center;">
     <button @click="reset">Reset weights</button>

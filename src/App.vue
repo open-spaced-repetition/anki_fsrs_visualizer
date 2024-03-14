@@ -84,7 +84,7 @@
       </td>
     </tr>
   </table>
-  <a href="https://github.com/xiety/anki_fsrs_visualizer" style="font-size: 75%;">Github</a>
+  <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" style="font-size: 75%;">Github</a>
 </template>
 <style>
 textarea {

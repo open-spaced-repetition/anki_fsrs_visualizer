@@ -1,17 +1,18 @@
 export class FsrsCalculator {
     readonly w: number[];
     readonly desiredR: number;
+    readonly decay: number;
+    readonly factor: number;
 
-    decay: number = -0.5;
-    factor: number = 19.0 / 81.0;
-
-    public constructor(w: number[], desiredR: number) {
+    public constructor(w: number[], m: number[]) {
         this.w = w;
-        this.desiredR = desiredR;
+        this.desiredR = m[0];
+        this.decay = m[1];
+        this.factor = m[2];
     }
 
     calcI(r: number, s: number): number {
-        return s / this.factor * (Math.pow(r, 1.0 / this.decay) - 1.0);
+        return (s / this.factor) * (Math.pow(r, 1.0 / this.decay) - 1.0);
     }
 
     calcS0(g: number): number {

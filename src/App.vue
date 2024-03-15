@@ -37,8 +37,8 @@
     </div>
   </div>
   <div style="font-size: 75%; width: 100%;">
-    <Slider :info="desiredRSlider" v-model="desiredR" />
-    <Slider v-for="(slider, index) in sliders" :info="slider" v-model="w[index]" v-on:change="commit" />
+    <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]" v-on:change="commit" />
+    <Slider v-for="(slider, index) in sliders" :info="slider" v-model="fsrs_params.w[index]" v-on:change="commit" />
   </div>
   <table class="table-dataset">
     <tr v-for="dataset in data.datasets">
@@ -116,7 +116,7 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, FsrsCalculator } from './fsrsCalculator';
-import { sliders, desiredRSlider } from './sliderInfo';
+import { sliders, additionalSliders } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -169,10 +169,14 @@ const scores_text = computed({
 });
 
 const initial_w = [0.5614, 1.2546, 3.5878, 7.9731, 5.1043, 1.1303, 0.8230, 0.0465, 1.6290, 0.1350, 1.0045, 2.1320, 0.0839, 0.3204, 1.3547, 0.2190, 2.7849];
-const w = ref([...initial_w]);
-const desiredR = ref(0.9);
+const initial_m = [0.9, -0.5, 19 / 81];
 
-const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(w, { clone: a => [...a] });
+const fsrs_params = ref({
+  w: [...initial_w],
+  m: [...initial_m],
+});
+
+const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
 
 function createLabels() {
   const max = Math.max(...scores.value.map(a => a.length));
@@ -180,7 +184,7 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-  const calc = new FsrsCalculator(w.value, desiredR.value);
+  const calc = new FsrsCalculator(fsrs_params.value.w, fsrs_params.value.m);
 
   // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
 
@@ -200,13 +204,17 @@ function createData(): ChartData<'line', MyData[]> {
 const data = computed(createData);
 
 const w_text = computed({
-  get: () => w.value.join(', '),
-  set: (newValue) => w.value = newValue.split(', ').map(parseFloat)
+  get: () => fsrs_params.value.w.join(', '),
+  set: (newValue) => fsrs_params.value.w = newValue.split(', ').map(parseFloat)
 });
 
 function reset() {
   for (let i in initial_w) {
-    w.value[i] = initial_w[i];
+    fsrs_params.value.w[i] = initial_w[i];
+  }
+
+  for (let i in initial_m) {
+    fsrs_params.value.m[i] = initial_m[i];
   }
 
   commit();

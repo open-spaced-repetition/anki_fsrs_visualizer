@@ -11,7 +11,8 @@
     </div>
   </div>
   <div class="whole">
-    <input v-model.lazy="w_text" v-on:change="commit" style="height: 100%; width: 100%; box-sizing: border-box; resize: none;" />
+    <input v-model.lazy="w_text" v-on:change="commit"
+      style="height: 100%; width: 100%; box-sizing: border-box; resize: none;" />
   </div>
   <div style="display: flex; flex-wrap: wrap; gap: 2px; align-items: center;">
     <button @click="reset">Reset weights</button>
@@ -36,45 +37,8 @@
     </div>
   </div>
   <div style="font-size: 75%; width: 100%;">
-    <!-- TODO: move to slider component -->
-    <div class="slider">
-      <div style="white-space: nowrap; width: 14em">{{ desiredRSlider.name }}</div>
-      <div>
-        <input style="width: 5em;" type="number" step="0.01" v-model="desiredR" :min="desiredRSlider.min"
-          :max="desiredRSlider.max" v-on:change="commit" />
-      </div>
-      <div style="flex: 1; min-width: 10em; display: flex; column-gap: 5px;">
-        <div class="minmax" style="text-align: right;">
-          {{ desiredRSlider.min }}
-        </div>
-        <div style="flex: 1;">
-          <input style="width: 100%;" type="range" step="0.01" v-model="desiredR" :min="desiredRSlider.min"
-            :max="desiredRSlider.max" v-on:change="commit" />
-        </div>
-        <div class="minmax">
-          {{ desiredRSlider.max }}
-        </div>
-      </div>
-    </div>
-    <div v-for="(slider, index) in sliders" class="slider">
-      <div style="white-space: nowrap; width: 14em">{{ index }}. {{ slider.name }}</div>
-      <div>
-        <input style="width: 5em;" type="number" step="0.01" v-model="w[index]" :min="slider.min" :max="slider.max"
-          v-on:change="commit" />
-      </div>
-      <div style="flex: 1; min-width: 10em; display: flex; column-gap: 5px;">
-        <div class="minmax" style="text-align: right;">
-          {{ slider.min }}
-        </div>
-        <div style="flex: 1;">
-          <input style="width: 100%;" type="range" step="0.01" v-model="w[index]" :min="slider.min" :max="slider.max"
-            v-on:change="commit" />
-        </div>
-        <div class="minmax">
-          {{ slider.max }}
-        </div>
-      </div>
-    </div>
+    <Slider :info="desiredRSlider" v-model="desiredR" />
+    <Slider v-for="(slider, index) in sliders" :info="slider" v-model="w[index]" v-on:change="commit" />
   </div>
   <table class="table-dataset">
     <tr v-for="dataset in data.datasets">
@@ -104,10 +68,6 @@ textarea {
   flex-direction: column;
 }
 
-.minmax {
-  width: 1.5em;
-}
-
 @media screen and (max-width: 600px) {
   .container-top {
     flex-direction: column;
@@ -125,13 +85,6 @@ textarea {
 
 .whole input {
   width: 100%;
-}
-
-.slider {
-  display: flex;
-  align-items: center;
-  column-gap: 3px;
-  flex-wrap: wrap;
 }
 
 .table-dataset {
@@ -169,6 +122,7 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { createOptions, MyLine, type MyData } from './chartOptions.js';
 import { Line } from 'vue-chartjs';
+import Slider from './Slider.vue';
 
 ChartJS.register(Title, Tooltip, Legend, PointElement, LineElement, CategoryScale, LinearScale, Colors, zoomPlugin, ChartDataLabels);
 

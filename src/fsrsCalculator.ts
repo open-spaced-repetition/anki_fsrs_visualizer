@@ -11,22 +11,22 @@ export class FsrsCalculator {
         this.factor = m[2];
     }
 
-    calcI(r: number, s: number): number {
+    calcInterval(r: number, s: number): number {
         return (s / this.factor) * (Math.pow(r, 1.0 / this.decay) - 1.0);
     }
 
-    calcS0(g: number): number {
+    calcStabilityStart(g: number): number {
         return this.w[g - 1];
     }
 
-    calcD0(g: number): number {
+    calcDifficultyStart(g: number): number {
         let d = this.w[4] - this.w[5] * (g - 3.0);
         return this.clamp(d, 1, 10);
     }
 
-    calcDN(d: number, g: number): number {
+    calcDifficultyNormal(d: number, g: number): number {
         let dn = d - this.w[6] * (g - 3.0);
-        let dn2 = this.w[7] * this.calcD0(3) + (1.0 - this.w[7]) * dn;
+        let dn2 = this.w[7] * this.calcDifficultyStart(3) + (1.0 - this.w[7]) * dn;
         return this.clamp(dn2, 1, 10);
     }
 
@@ -34,7 +34,7 @@ export class FsrsCalculator {
         return Math.exp(w * (1.0 - r));
     }
 
-    calcSN(d: number, s: number, r: number, g: number): number {
+    calcStabilityNormal(d: number, s: number, r: number, g: number): number {
         let p = 1.0;
         if (g == 2)
             p = this.w[15];
@@ -44,11 +44,11 @@ export class FsrsCalculator {
         return s * (1.0 + sinc);
     }
 
-    calcSF(d: number, s: number, r: number): number {
+    calcStabilityFailed(d: number, s: number, r: number): number {
         return this.w[11] * Math.pow(d, -this.w[12]) * (Math.pow(s + 1.0, this.w[13]) - 1.0) * this.calcRevExp(this.w[14], r);
     }
 
-    calcRD(d: number) {
+    calcDisplayDifficulty(d: number) {
         return (d - 1.0) / 9.0 * 100.0;
     }
 
@@ -60,27 +60,30 @@ export class FsrsCalculator {
         if (g < 1 || g > 4)
             return card;
 
+        const difficulty = this.calcNextDifficulty(card, g);
+        const stability = this.calcNextStability(card, g);
+        const displayDifficulty = this.calcDisplayDifficulty(difficulty);
+        const interval = this.calcInterval(this.desiredR, stability);
+        const cumulativeInterval = card.cumulativeInterval + interval;
+
+        return new Card(false, difficulty, displayDifficulty, stability, interval, cumulativeInterval, g);
+    }
+
+    private calcNextDifficulty(card: Card, g: number): number {
         if (card.new) {
-            const d = this.calcD0(g);
-            const rd = this.calcRD(d);
-            const s = this.calcS0(g);
-            const i = this.calcI(this.desiredR, s);
-            const ci = card.cumulativeInterval + i;
-            return new Card(false, d, rd, s, i, ci, g);
-        } else if (g == 1) {
-            const d = this.calcDN(card.difficulty, g);
-            const rd = this.calcRD(d);
-            const s = this.calcSF(card.difficulty, card.stability, this.desiredR);
-            const i = this.calcI(this.desiredR, s);
-            const ci = card.cumulativeInterval + i;
-            return new Card(false, d, rd, s, i, ci, g);
+            return this.calcDifficultyStart(g);
         } else {
-            const d = this.calcDN(card.difficulty, g);
-            const rd = this.calcRD(d);
-            const s = this.calcSN(card.difficulty, card.stability, this.desiredR, g);
-            const i = this.calcI(this.desiredR, s);
-            const ci = card.cumulativeInterval + i;
-            return new Card(false, d, rd, s, i, ci, g);
+            return this.calcDifficultyNormal(card.difficulty, g);
+        }
+    }
+
+    private calcNextStability(card: Card, g: number): number {
+        if (card.new) {
+            return this.calcStabilityStart(g);
+        } else if (g == 1) {
+            return this.calcStabilityFailed(card.difficulty, card.stability, this.desiredR);
+        } else {
+            return this.calcStabilityNormal(card.difficulty, card.stability, this.desiredR, g);
         }
     }
 
@@ -100,16 +103,16 @@ export class FsrsCalculator {
 export class Card {
     new: boolean;
     difficulty: number;
-    realDifficulty: number;
+    displayDifficulty: number;
     stability: number;
     interval: number;
     cumulativeInterval: number;
     score: number;
 
-    public constructor(n: boolean, difficulty: number, realDifficulty: number, stability: number, interval: number, cumulativeInterval: number, score: number) {
+    public constructor(n: boolean, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, score: number) {
         this.new = n;
         this.difficulty = difficulty;
-        this.realDifficulty = realDifficulty;
+        this.displayDifficulty = displayDifficulty;
         this.stability = stability;
         this.interval = interval;
         this.cumulativeInterval = cumulativeInterval;

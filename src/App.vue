@@ -20,16 +20,16 @@
     <button @click="redo" :disabled='!canRedo'>Redo</button>
     {{ undoStack.length }} / {{ redoStack.length + undoStack.length }}
     <div>
-      <input id="mode-interval" type="radio" value="interval" v-model="mode" />
+      <input id="mode-interval" type="radio" :value="nameof<Card>('interval')" v-model="mode" />
       <label for="mode-interval">Interval</label>
     </div>
     <div>
-      <input id="mode-cumulativeInterval" type="radio" value="cumulativeInterval" v-model="mode" />
+      <input id="mode-cumulativeInterval" type="radio" :value="nameof<Card>('cumulativeInterval')" v-model="mode" />
       <label for="mode-cumulativeInterval">Cumulative</label>
     </div>
     <div>
-      <input id="mode-realDifficulty" type="radio" value="realDifficulty" v-model="mode" />
-      <label for="mode-realDifficulty">Difficulty</label>
+      <input id="mode-displayDifficulty" type="radio" :value="nameof<Card>('displayDifficulty')" v-model="mode" />
+      <label for="mode-displayDifficulty">Difficulty</label>
     </div>
     <div>
       <input id="animation" type="checkbox" v-model="animation" />
@@ -37,7 +37,8 @@
     </div>
   </div>
   <div style="font-size: 75%; width: 100%;">
-    <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]" v-on:change="commit" />
+    <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]"
+      v-on:change="commit" />
     <Slider v-for="(slider, index) in sliders" :info="slider" v-model="fsrs_params.w[index]" v-on:change="commit" />
   </div>
   <table class="table-dataset">
@@ -126,6 +127,8 @@ import Slider from './Slider.vue';
 
 ChartJS.register(Title, Tooltip, Legend, PointElement, LineElement, CategoryScale, LinearScale, Colors, zoomPlugin, ChartDataLabels);
 
+const nameof = <T>(name: keyof T) => name;
+
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 
@@ -141,7 +144,7 @@ const options = createOptions();
 
 function getDataLabel(card: Card) {
   const names = ["", "Again", "Hard", "Good", "Easy"];
-  return `${names[card.score]} ${card.realDifficulty.toFixed(0)}%`;
+  return `${names[card.score]} ${card.displayDifficulty.toFixed(0)}%`;
 }
 
 function convertCardToMyData(card: Card): MyData {

@@ -20,13 +20,13 @@ export class FsrsCalculator {
     }
 
     calcDifficultyStart(g: number): number {
-        let d = this.w[4] - this.w[5] * (g - 3.0);
+        const d = this.w[4] - this.w[5] * (g - 3.0);
         return this.clamp(d, 1, 10);
     }
 
     calcDifficultyNormal(d: number, g: number): number {
-        let dn = d - this.w[6] * (g - 3.0);
-        let dn2 = this.w[7] * this.calcDifficultyStart(3) + (1.0 - this.w[7]) * dn;
+        const dn = d - this.w[6] * (g - 3.0);
+        const dn2 = this.w[7] * this.calcDifficultyStart(3) + (1.0 - this.w[7]) * dn;
         return this.clamp(dn2, 1, 10);
     }
 
@@ -40,7 +40,7 @@ export class FsrsCalculator {
             p = this.w[15];
         else if (g == 4)
             p = this.w[16];
-        let sinc = Math.exp(this.w[8]) * (11.0 - d) * Math.pow(s, -this.w[9]) * (this.calcRevExp(this.w[10], r) - 1.0) * p;
+        const sinc = Math.exp(this.w[8]) * (11.0 - d) * Math.pow(s, -this.w[9]) * (this.calcRevExp(this.w[10], r) - 1.0) * p;
         return s * (1.0 + sinc);
     }
 
@@ -88,10 +88,10 @@ export class FsrsCalculator {
     }
 
     public steps(scores: number[]): Card[] {
-        var card = new Card(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
-        let list = [];
+        let card = new Card(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
+        const list = [];
 
-        for (let score of scores) {
+        for (const score of scores) {
             card = this.step(card, score);
             list.push(card);
         }

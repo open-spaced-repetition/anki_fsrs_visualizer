@@ -47,7 +47,7 @@ export function createOptions(): ChartOptions<'line'> {
                 color: '#36A2EB',
                 align: 'left',
                 anchor: 'center',
-                display: 'auto',
+                display: true,
                 formatter: (obj, _) => obj.label, //TODO: type
             },
             colors: {

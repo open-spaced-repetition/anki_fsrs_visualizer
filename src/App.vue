@@ -118,7 +118,7 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, FsrsCalculator } from './fsrsCalculator';
-import { sliders, additionalSliders } from './sliderInfo';
+import { sliders, additionalSliders, default_weights } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -172,8 +172,8 @@ const scores_text = computed({
     set: (newValue) => scores.value = newValue.split('\n').map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number)),
 });
 
-const initial_w = [0.5614, 1.2546, 3.5878, 7.9731, 5.1043, 1.1303, 0.8230, 0.0465, 1.6290, 0.1350, 1.0045, 2.1320, 0.0839, 0.3204, 1.3547, 0.2190, 2.7849];
-const initial_m = [0.9, -0.5, 19 / 81];
+const initial_w = default_weights;
+const initial_m = [0.9];
 
 const fsrs_params = ref({
     w: [...initial_w],
@@ -208,7 +208,7 @@ function createData(): ChartData<'line', MyData[]> {
 const data = computed(createData);
 
 const w_text = computed({
-    get: () => fsrs_params.value.w.join(', '),
+    get: () => fsrs_params.value.w.map(f => f.toFixed(4)).join(', '),
     set: (newValue) => fsrs_params.value.w = newValue.split(', ').map(parseFloat)
 });
 

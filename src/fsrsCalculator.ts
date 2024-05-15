@@ -7,8 +7,8 @@ export class FsrsCalculator {
     public constructor(w: number[], m: number[]) {
         this.w = w;
         this.desiredR = m[0];
-        this.decay = m[1];
-        this.factor = m[2];
+        this.decay = -0.5; 
+        this.factor = 19.0 / 81.0;
     }
 
     calcInterval(r: number, s: number): number {

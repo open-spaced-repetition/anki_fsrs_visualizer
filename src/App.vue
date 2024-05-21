@@ -1,10 +1,10 @@
 <template>
     <div class="container-top">
-        <div class="scores">
+        <div class="reviews">
             <div>
-                <button @click="resetScores">Reset reviews</button>
+                <button @click="resetReviews">Reset reviews</button>
             </div>
-            <textarea v-model="scores_text"></textarea>
+            <textarea v-model="reviews_text"></textarea>
         </div>
         <div style="position: relative; flex: 1;">
             <Line :data="data" :options="options" />
@@ -15,7 +15,7 @@
             style="height: 100%; width: 100%; box-sizing: border-box; resize: none;" />
     </div>
     <div style="display: flex; flex-wrap: wrap; gap: 2px; align-items: center;">
-        <button @click="reset">Reset weights</button>
+        <button @click="reset">Reset parameters</button>
         <button @click="undo" :disabled='!canUndo'>Undo</button>
         <button @click="redo" :disabled='!canRedo'>Redo</button>
         {{ undoStack.length }} / {{ redoStack.length + undoStack.length }}
@@ -64,7 +64,7 @@ textarea {
     gap: 3px;
 }
 
-.scores {
+.reviews {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -75,7 +75,7 @@ textarea {
         flex-direction: column;
     }
 
-    .scores {
+    .reviews {
         height: 10vh;
         width: 100%;
     }
@@ -118,7 +118,7 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, FsrsCalculator } from './fsrsCalculator';
-import { sliders, additionalSliders, default_weights } from './sliderInfo';
+import { sliders, additionalSliders, default_parameters } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -145,7 +145,7 @@ const options = createOptions();
 
 function getDataLabel(card: Card) {
     const names = ["", "Again", "Hard", "Good", "Easy"];
-    return `${names[card.score]} ${card.displayDifficulty.toFixed(0)}%`;
+    return `${names[card.grade]} ${card.displayDifficulty.toFixed(0)}%`;
 }
 
 function convertCardToMyData(card: Card): MyData {
@@ -156,7 +156,7 @@ function convertCardToMyData(card: Card): MyData {
     };
 }
 
-const initial_scores: number[][] = [
+const initial_reviews: number[][] = [
     [3, 3, 3, 3],
     [3, 3, 3, 2],
     [3, 3, 3, 1],
@@ -165,25 +165,24 @@ const initial_scores: number[][] = [
     [4, 3, 3, 1],
 ];
 
-const scores = ref(initial_scores);
+const reviews = ref(initial_reviews);
 
-const scores_text = computed({
-    get: () => scores.value.map(a => a.join('')).join('\n'),
-    set: (newValue) => scores.value = newValue.split('\n').map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number)),
+const reviews_text = computed({
+    get: () => reviews.value.map(a => a.join('')).join('\n'),
+    set: (newValue) => reviews.value = newValue.split('\n').map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number)),
 });
 
-const initial_w = default_weights;
 const initial_m = [0.9];
 
 const fsrs_params = ref({
-    w: [...initial_w],
+    w: [...default_parameters],
     m: [...initial_m],
 });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
 
 function createLabels() {
-    const max = Math.max(...scores.value.map(a => a.length));
+    const max = Math.max(...reviews.value.map(a => a.length));
     return Array.from({ length: max }, (_, i) => `${i}`)
 }
 
@@ -194,12 +193,12 @@ function createData(): ChartData<'line', MyData[]> {
 
     return {
         labels: createLabels(),
-        datasets: scores.value.map(score => {
+        datasets: reviews.value.map(review => {
             return {
-                label: score.join(""),
+                label: review.join(""),
                 pointRadius: 4,
                 pointHoverRadius: 5,
-                data: calc.steps(score).map(convertCardToMyData),
+                data: calc.steps(review).map(convertCardToMyData),
             } as ChartDataset<'line', MyData[]>;
         }),
     };
@@ -213,8 +212,8 @@ const w_text = computed({
 });
 
 function reset() {
-    for (let i in initial_w) {
-        fsrs_params.value.w[i] = initial_w[i];
+    for (let i in default_parameters) {
+        fsrs_params.value.w[i] = default_parameters[i];
     }
 
     for (let i in initial_m) {
@@ -224,7 +223,7 @@ function reset() {
     commit();
 }
 
-function resetScores() {
-    scores.value = initial_scores;
+function resetReviews() {
+    reviews.value = initial_reviews;
 }
 </script>

@@ -56,43 +56,43 @@ export class FsrsCalculator {
         return Math.max(min, Math.min(number, max));
     }
 
-    public step(card: Card, g: number): Card {
-        if (g < 1 || g > 4)
+    public step(card: Card, grade: number): Card {
+        if (grade < 1 || grade > 4)
             return card;
 
-        const difficulty = this.calcNextDifficulty(card, g);
-        const stability = this.calcNextStability(card, g);
+        const difficulty = this.calcNextDifficulty(card, grade);
+        const stability = this.calcNextStability(card, grade);
         const displayDifficulty = this.calcDisplayDifficulty(difficulty);
         const interval = this.calcInterval(this.desiredR, stability);
         const cumulativeInterval = card.cumulativeInterval + interval;
 
-        return new Card(false, difficulty, displayDifficulty, stability, interval, cumulativeInterval, g);
+        return new Card(false, difficulty, displayDifficulty, stability, interval, cumulativeInterval, grade);
     }
 
-    private calcNextDifficulty(card: Card, g: number): number {
+    private calcNextDifficulty(card: Card, grade: number): number {
         if (card.new) {
-            return this.calcDifficultyStart(g);
+            return this.calcDifficultyStart(grade);
         } else {
-            return this.calcDifficultyNormal(card.difficulty, g);
+            return this.calcDifficultyNormal(card.difficulty, grade);
         }
     }
 
-    private calcNextStability(card: Card, g: number): number {
+    private calcNextStability(card: Card, grade: number): number {
         if (card.new) {
-            return this.calcStabilityStart(g);
-        } else if (g == 1) {
+            return this.calcStabilityStart(grade);
+        } else if (grade == 1) {
             return this.calcStabilityFailed(card.difficulty, card.stability, this.desiredR);
         } else {
-            return this.calcStabilityNormal(card.difficulty, card.stability, this.desiredR, g);
+            return this.calcStabilityNormal(card.difficulty, card.stability, this.desiredR, grade);
         }
     }
 
-    public steps(scores: number[]): Card[] {
+    public steps(reviews: number[]): Card[] {
         let card = new Card(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
         const list = [];
 
-        for (const score of scores) {
-            card = this.step(card, score);
+        for (const review of reviews) {
+            card = this.step(card, review);
             list.push(card);
         }
 
@@ -107,15 +107,15 @@ export class Card {
     stability: number;
     interval: number;
     cumulativeInterval: number;
-    score: number;
+    grade: number;
 
-    public constructor(n: boolean, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, score: number) {
+    public constructor(n: boolean, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, grade: number) {
         this.new = n;
         this.difficulty = difficulty;
         this.displayDifficulty = displayDifficulty;
         this.stability = stability;
         this.interval = interval;
         this.cumulativeInterval = cumulativeInterval;
-        this.score = score;
+        this.grade = grade;
     }
 }

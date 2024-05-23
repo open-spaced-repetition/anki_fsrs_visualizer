@@ -15,6 +15,7 @@
         "chart.js": "^4.4.2",
         "chartjs-plugin-datalabels": "^2.2.0",
         "chartjs-plugin-zoom": "^2.0.1",
+        "ts-fsrs": "^3.5.7",
         "vue": "^3.4.21",
         "vue-chartjs": "^5.3.0"
     },

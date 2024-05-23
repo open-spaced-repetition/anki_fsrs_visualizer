@@ -1,4 +1,6 @@
-export class FsrsCalculator {
+import { Card, type IFsrsCalculator } from "./IFsrsCalculator";
+
+export class FsrsCalculator implements IFsrsCalculator {
     readonly w: number[];
     readonly desiredR: number;
     readonly decay: number;
@@ -102,25 +104,5 @@ export class FsrsCalculator {
         }
 
         return list;
-    }
-}
-
-export class Card {
-    new: boolean;
-    difficulty: number;
-    displayDifficulty: number;
-    stability: number;
-    interval: number;
-    cumulativeInterval: number;
-    grade: number;
-
-    public constructor(n: boolean, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, grade: number) {
-        this.new = n;
-        this.difficulty = difficulty;
-        this.displayDifficulty = displayDifficulty;
-        this.stability = stability;
-        this.interval = interval;
-        this.cumulativeInterval = cumulativeInterval;
-        this.grade = grade;
     }
 }

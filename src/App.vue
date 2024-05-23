@@ -36,6 +36,10 @@
             <input id="animation" type="checkbox" v-model="animation" />
             <label for="animation">Animation</label>
         </div>
+        <div>
+            <input id="tsfsrs" type="checkbox" v-model="tsfsrs" />
+            <label for="tsfsrs">ts-fsrs</label>
+        </div>
     </div>
     <div style="font-size: 75%; width: 100%;">
         <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]"
@@ -117,7 +121,9 @@ import {
     Colors,
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
-import { Card, FsrsCalculator } from './fsrsCalculator';
+import { Card, type IFsrsCalculator } from "./IFsrsCalculator";
+import { FsrsCalculator } from './fsrsCalculator';
+import { TsFsrsCalculator } from './tsFsrsCalculator';
 import { sliders, additionalSliders, default_parameters, initial_reviews } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
@@ -132,6 +138,7 @@ function nameof<T>(name: keyof T) { return name; }
 
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
+const tsfsrs = ref(false);
 
 //can't disable animation using reactive options, so using watch
 
@@ -178,7 +185,9 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-    const calc = new FsrsCalculator(fsrs_params.value.w, fsrs_params.value.m);
+    const calc: IFsrsCalculator = tsfsrs.value
+        ? new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m)
+        : new FsrsCalculator(fsrs_params.value.w, fsrs_params.value.m);
 
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
 

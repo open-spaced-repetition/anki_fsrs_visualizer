@@ -15,6 +15,10 @@ export class FsrsCalculator {
         return (s / this.factor) * (Math.pow(r, 1.0 / this.decay) - 1.0);
     }
 
+    calcRetention(interval: number, s: number): number {
+        return Math.pow(1 + (this.factor * interval) / s, this.decay);
+    }
+
     calcStabilityStart(g: number): number {
         return this.w[g - 1];
     }
@@ -60,8 +64,9 @@ export class FsrsCalculator {
         if (grade < 1 || grade > 4)
             return card;
 
+        const retention = this.calcRetention(Math.round(card.interval), card.stability);
         const difficulty = this.calcNextDifficulty(card, grade);
-        const stability = this.calcNextStability(card, grade);
+        const stability = this.calcNextStability(card, grade, retention);
         const displayDifficulty = this.calcDisplayDifficulty(difficulty);
         const interval = this.calcInterval(this.desiredR, stability);
         const cumulativeInterval = card.cumulativeInterval + interval;
@@ -77,13 +82,13 @@ export class FsrsCalculator {
         }
     }
 
-    private calcNextStability(card: Card, grade: number): number {
+    private calcNextStability(card: Card, grade: number, retention: number): number {
         if (card.new) {
             return this.calcStabilityStart(grade);
         } else if (grade == 1) {
-            return this.calcStabilityFailed(card.difficulty, card.stability, this.desiredR);
+            return this.calcStabilityFailed(card.difficulty, card.stability, retention);
         } else {
-            return this.calcStabilityNormal(card.difficulty, card.stability, this.desiredR, grade);
+            return this.calcStabilityNormal(card.difficulty, card.stability, retention, grade);
         }
     }
 

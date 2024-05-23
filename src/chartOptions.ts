@@ -1,4 +1,4 @@
-import type { ChartOptions } from 'chart.js';
+import type { ChartOptions, TooltipItem, TooltipModel } from 'chart.js';
 import type { ZoomPluginOptions } from 'chartjs-plugin-zoom/types/options';
 import type { TypedChartComponent } from 'node_modules/vue-chartjs/dist/types';
 
@@ -52,7 +52,14 @@ export function createOptions(): ChartOptions<'line'> {
             },
             colors: {
                 forceOverride: true,
-            }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (this: TooltipModel<"line">, tooltipItem: TooltipItem<"line">) {
+                        return `${tooltipItem.parsed.y.toFixed(2)}`;
+                    }
+                }
+            },
         }
     };
 }

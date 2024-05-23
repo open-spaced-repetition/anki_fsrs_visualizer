@@ -118,7 +118,7 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, FsrsCalculator } from './fsrsCalculator';
-import { sliders, additionalSliders, default_parameters } from './sliderInfo';
+import { sliders, additionalSliders, default_parameters, initial_reviews } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -156,15 +156,6 @@ function convertCardToMyData(card: Card): MyData {
     };
 }
 
-const initial_reviews: number[][] = [
-    [3, 3, 3, 3],
-    [3, 3, 3, 2],
-    [3, 3, 3, 1],
-    [2, 3, 3, 3],
-    [1, 3, 3, 3],
-    [4, 3, 3, 1],
-];
-
 const reviews = ref(initial_reviews);
 
 const reviews_text = computed({
@@ -183,7 +174,7 @@ const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManual
 
 function createLabels() {
     const max = Math.max(...reviews.value.map(a => a.length));
-    return Array.from({ length: max }, (_, i) => `${i}`)
+    return Array.from({ length: max }, (_, review) => `${review}`)
 }
 
 function createData(): ChartData<'line', MyData[]> {
@@ -208,7 +199,7 @@ const data = computed(createData);
 
 const w_text = computed({
     get: () => fsrs_params.value.w.map(f => f.toFixed(4)).join(', '),
-    set: (newValue) => fsrs_params.value.w = newValue.split(', ').map(parseFloat)
+    set: (newValue) => fsrs_params.value.w = newValue.replace(', ', ',').split(',').map(parseFloat)
 });
 
 function reset() {

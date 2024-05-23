@@ -7,6 +7,15 @@ export interface SliderInfo {
 // https://github.com/open-spaced-repetition/fsrs-rs/blob/main/src/inference.rs
 export const default_parameters = [0.5701, 1.4436, 4.1386, 10.9355, 5.1443, 1.2006, 0.8627, 0.0362, 1.6290, 0.1342, 1.0166, 2.1174, 0.0839, 0.3204, 1.4676, 0.2190, 2.8237];
 
+export const initial_reviews: number[][] = [
+    [3, 3, 3, 3],
+    [3, 3, 3, 2],
+    [3, 3, 3, 1],
+    [2, 3, 3, 3],
+    [1, 3, 3, 3],
+    [4, 3, 3, 1],
+];
+
 // https://github.com/open-spaced-repetition/fsrs-rs/blob/main/src/weight_clipper.rs
 export const sliders: SliderInfo[] = [
     { name: "0. initial stability (Again)", min: 0.01, max: 100 },

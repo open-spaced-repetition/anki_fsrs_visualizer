@@ -1,4 +1,4 @@
-import { createEmptyCard, fsrs, generatorParameters, type Grade } from "ts-fsrs";
+import { State, createEmptyCard, fsrs, generatorParameters, type Grade } from "ts-fsrs";
 import { Card, type IFsrsCalculator } from "./IFsrsCalculator";
 
 export class TsFsrsCalculator implements IFsrsCalculator {
@@ -32,17 +32,19 @@ export class TsFsrsCalculator implements IFsrsCalculator {
         const f = fsrs(generatorParameters({ w: this.w }));
 
         for (const review of reviews) {
-            const scheduling_cards = f.repeat(fsrs_card, fsrs_card.due);
+            const date = fsrs_card.due;
+            const scheduling_cards = f.repeat(fsrs_card, date);
             fsrs_card = scheduling_cards[<Grade>review].card;
-
-            // if (fsrs_card.state == 1) {//learning
-            //     const scheduling_cards = f.repeat(fsrs_card, fsrs_card.due);
-            //     fsrs_card = scheduling_cards[<Grade>review].card;
-            // }
 
             const displayDifficulty = this.calcDisplayDifficulty(fsrs_card.difficulty);
             const interval = this.calcInterval(this.desiredR, fsrs_card.stability);
             const cumulativeInterval = card.cumulativeInterval + interval;
+
+            if (fsrs_card.state != State.Review) {
+                fsrs_card.state = State.Review;
+                const days = Math.max(1, Math.round(interval));
+                fsrs_card.due = new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+            }
 
             card = new Card(false, fsrs_card.difficulty, displayDifficulty, fsrs_card.stability, interval, cumulativeInterval, review);
             list.push(card);

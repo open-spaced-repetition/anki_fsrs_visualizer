@@ -64,7 +64,7 @@ export class FsrsCalculator {
         if (grade < 1 || grade > 4)
             return card;
 
-        const retention = this.calcRetention(Math.round(card.interval), card.stability);
+        const retention = this.calcRetention(Math.max(1, Math.round(card.interval)), card.stability);
         const difficulty = this.calcNextDifficulty(card, grade);
         const stability = this.calcNextStability(card, grade, retention);
         const displayDifficulty = this.calcDisplayDifficulty(difficulty);

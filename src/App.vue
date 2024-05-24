@@ -50,7 +50,7 @@
         <tr v-for="dataset in data.datasets">
             <td>{{ dataset.label }}</td>
             <td v-for="item in dataset.data">
-                {{ item.y.toFixed(2) }}
+                {{ item.stability.toFixed(2) }}
             </td>
         </tr>
     </table>
@@ -148,7 +148,9 @@ watch(animation, a => {
     }
 });
 
-const options = createOptions();
+const options = createOptions((item: MyData) => {
+    return `${item.y} (${item.stability.toFixed(2)})`;
+});
 
 function getDataLabel(card: Card) {
     const names = ["", "Again", "Hard", "Good", "Easy"];
@@ -159,6 +161,7 @@ function convertCardToMyData(card: Card): MyData {
     return {
         x: 0.0, //unused but required
         y: card[mode.value] as number,
+        stability: card.stability,
         label: getDataLabel(card)
     };
 }

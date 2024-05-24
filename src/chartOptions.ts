@@ -21,7 +21,7 @@ const zoomOptions: ZoomPluginOptions = {
     }
 };
 
-export function createOptions(): ChartOptions<'line'> {
+export function createOptions(tooltip: (raw: any) => string): ChartOptions<'line'> {
     return {
         responsive: true,
         maintainAspectRatio: false,
@@ -35,8 +35,8 @@ export function createOptions(): ChartOptions<'line'> {
                 max: 75,
                 ticks: {
                     format: {
-                        minimumFractionDigits: 1,
-                        maximumFractionDigits: 1,
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
                     },
                 }
             }
@@ -56,7 +56,7 @@ export function createOptions(): ChartOptions<'line'> {
             tooltip: {
                 callbacks: {
                     label: function (this: TooltipModel<"line">, tooltipItem: TooltipItem<"line">) {
-                        return `${tooltipItem.parsed.y.toFixed(2)}`;
+                        return tooltip(tooltipItem.raw);
                     }
                 }
             },
@@ -71,4 +71,5 @@ export interface MyData {
     x: number,
     y: number,
     label: string,
+    stability: number,
 }

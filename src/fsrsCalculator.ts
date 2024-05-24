@@ -14,7 +14,7 @@ export class FsrsCalculator implements IFsrsCalculator {
     }
 
     calcInterval(r: number, s: number): number {
-        return (s / this.factor) * (Math.pow(r, 1.0 / this.decay) - 1.0);
+        return Math.max(1, Math.round((s / this.factor) * (Math.pow(r, 1.0 / this.decay) - 1.0)));
     }
 
     calcRetention(interval: number, s: number): number {
@@ -66,7 +66,7 @@ export class FsrsCalculator implements IFsrsCalculator {
         if (grade < 1 || grade > 4)
             return card;
 
-        const retention = this.calcRetention(Math.max(1, Math.round(card.interval)), card.stability);
+        const retention = this.calcRetention(card.interval, card.stability);
         const difficulty = this.calcNextDifficulty(card, grade);
         const stability = this.calcNextStability(card, grade, retention);
         const displayDifficulty = this.calcDisplayDifficulty(difficulty);

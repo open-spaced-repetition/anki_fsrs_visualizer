@@ -21,7 +21,7 @@ const zoomOptions: ZoomPluginOptions = {
     }
 };
 
-export function createOptions(tooltip: (raw: any) => string): ChartOptions<'line'> {
+export function createOptions(params: { title_function: (raw: any) => string, tooltip_function: (raw: any) => string }): ChartOptions<'line'> {
     return {
         responsive: true,
         maintainAspectRatio: false,
@@ -55,21 +55,14 @@ export function createOptions(tooltip: (raw: any) => string): ChartOptions<'line
             },
             tooltip: {
                 callbacks: {
+                    title: function (this: TooltipModel<"line">, tooltipItems: TooltipItem<"line">[]) {
+                        return params.title_function(tooltipItems.map(a => a.raw));
+                    },
                     label: function (this: TooltipModel<"line">, tooltipItem: TooltipItem<"line">) {
-                        return tooltip(tooltipItem.raw);
+                        return params.tooltip_function(tooltipItem.raw);
                     }
                 }
             },
         }
     };
-}
-
-//TODO: this doesn't work now
-export declare const MyLine: TypedChartComponent<"line", MyData[], unknown>;
-
-export interface MyData {
-    x: number,
-    y: number,
-    label: string,
-    stability: number,
 }

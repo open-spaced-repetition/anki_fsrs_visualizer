@@ -4,6 +4,7 @@
             <div>
                 <button @click="resetReviews">Reset reviews</button>
             </div>
+            <div class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</div>
             <textarea v-model="reviews_text"></textarea>
         </div>
         <div style="position: relative; flex: 1;">
@@ -50,7 +51,7 @@
         <tr v-for="dataset in data.datasets">
             <td>{{ dataset.label }}</td>
             <td v-for="item in dataset.data">
-                {{ item.stability.toFixed(2) }}
+                {{ item.card.stability.toFixed(2) }}
             </td>
         </tr>
     </table>
@@ -66,6 +67,10 @@ textarea {
     display: flex;
     height: 50vh;
     gap: 3px;
+}
+
+.small-hint {
+    font-size: 70%;
 }
 
 .reviews {
@@ -128,7 +133,7 @@ import { sliders, additionalSliders, default_parameters, initial_reviews } from 
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { createOptions, MyLine, type MyData } from './chartOptions.js';
+import { createOptions } from './chartOptions.js';
 import { Line } from 'vue-chartjs';
 import Slider from './Slider.vue';
 
@@ -139,30 +144,37 @@ function nameof<T>(name: keyof T) { return name; }
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 const tsfsrs = ref(false);
+const names = ["", "Again", "Hard", "Good", "Easy"];
 
 //can't disable animation using reactive options, so using watch
-
 watch(animation, a => {
     if (typeof options.animation == "object") {
         options.animation.duration = (a ? 500 : 0);
     }
 });
 
-const options = createOptions((item: MyData) => {
-    return `${item.y} (${item.stability.toFixed(2)})`;
+const options = createOptions({
+    title_function: (items: MyData[]) => {
+        const unique = [...new Set(items.map(a => a.y))]
+        return `Days: ${unique.join(', ')}`;
+    },
+    tooltip_function: (item: MyData) => {
+        const review_text = item.review.join("");
+        return `${review_text}: ${names[item.x]}, Stability: ${item.card.stability.toFixed(2)}, Difficulty: ${item.card.displayDifficulty.toFixed(0)}%`;
+    }
 });
 
 function getDataLabel(card: Card) {
-    const names = ["", "Again", "Hard", "Good", "Easy"];
-    return `${names[card.grade]} ${card.displayDifficulty.toFixed(0)}%`;
+    return `${names[card.grade]} (Difficulty: ${card.displayDifficulty.toFixed(0)}%)`;
 }
 
-function convertCardToMyData(card: Card): MyData {
+function convertCardToMyData(card: Card, review: number[]): MyData {
     return {
-        x: 0.0, //unused but required
+        x: card.grade,
         y: card[mode.value] as number,
-        stability: card.stability,
-        label: getDataLabel(card)
+        card: card,
+        review: review,
+        label: getDataLabel(card),
     };
 }
 
@@ -193,7 +205,6 @@ function createData(): ChartData<'line', MyData[]> {
         : new FsrsCalculator(fsrs_params.value.w, fsrs_params.value.m);
 
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
-
     return {
         labels: createLabels(),
         datasets: reviews.value.map(review => {
@@ -201,7 +212,7 @@ function createData(): ChartData<'line', MyData[]> {
                 label: review.join(""),
                 pointRadius: 4,
                 pointHoverRadius: 5,
-                data: calc.steps(review).map(convertCardToMyData),
+                data: calc.steps(review).map(a => convertCardToMyData(a, review)),
             } as ChartDataset<'line', MyData[]>;
         }),
     };
@@ -228,5 +239,13 @@ function reset() {
 
 function resetReviews() {
     reviews.value = initial_reviews;
+}
+
+export interface MyData {
+    x: number,
+    y: number,
+    label: string,
+    review: number[],
+    card: Card,
 }
 </script>

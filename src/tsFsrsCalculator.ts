@@ -24,24 +24,25 @@ export class TsFsrsCalculator implements IFsrsCalculator {
 
         const f = fsrs(generatorParameters({
             w: this.w,
-            request_retention: this.desiredR
+            request_retention: this.desiredR,
+            enable_short_term: this.enableShortTerm
         }));
 
         for (const review of reviews) {
             const date = fsrs_card.due
-            const scheduling_cards = f.repeat(fsrs_card, date);
-            fsrs_card = scheduling_cards[<Grade>review].card;
+            fsrs_card = f.next(fsrs_card, date, <Grade>review, (recordItem) => {
+                const { card } = recordItem;
+                const interval = f.next_interval(card.stability, card.elapsed_days)
+                card.due = new Date(date.getTime() + interval * 24 * 60 * 60 * 1000);
+                card.scheduled_days = interval;
+                return card
+            });
 
             const displayDifficulty = this.calcDisplayDifficulty(fsrs_card.difficulty);
-            const interval = f.next_interval(fsrs_card.stability, 0)
+            const interval = fsrs_card.scheduled_days;
             const cumulativeInterval = card.cumulativeInterval + interval;
 
-            if (fsrs_card.state != State.Review) {
-                fsrs_card.state = State.Review;
-                fsrs_card.due = new Date(date.getTime() + interval * 24 * 60 * 60 * 1000);
-            }
-
-            list.push(new Card(0, fsrs_card.difficulty, displayDifficulty, fsrs_card.stability, interval, cumulativeInterval, review));
+            list.push(new Card(fsrs_card.state, fsrs_card.difficulty, displayDifficulty, fsrs_card.stability, interval, cumulativeInterval, review));
         }
 
         return list;

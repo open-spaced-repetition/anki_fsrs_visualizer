@@ -41,6 +41,10 @@
             <input id="tsfsrs" type="checkbox" v-model="tsfsrs" />
             <label for="tsfsrs">ts-fsrs</label>
         </div>
+        <div>
+            <input id="short_term" type="checkbox" v-model="fsrs_params.short_term" />
+            <label for="short_term" :title="short_term_desc">Short-term</label>
+        </div>
     </div>
     <div style="font-size: 75%; width: 100%;">
         <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]"
@@ -146,6 +150,8 @@ const animation = ref(true);
 const tsfsrs = ref(false);
 const names = ["", "Again", "Hard", "Good", "Easy"];
 
+const short_term_desc= ref('When disabled, this allow user to skip the short-term scheduler and directly switch to the long-term scheduler.')
+
 //can't disable animation using reactive options, so using watch
 watch(animation, a => {
     if (typeof options.animation == "object") {
@@ -190,6 +196,7 @@ const initial_m = [0.9];
 const fsrs_params = ref({
     w: [...default_parameters],
     m: [...initial_m],
+    short_term: true,
 });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
@@ -201,8 +208,8 @@ function createLabels() {
 
 function createData(): ChartData<'line', MyData[]> {
     const calc: IFsrsCalculator = tsfsrs.value
-        ? new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m)
-        : new FsrsCalculator(fsrs_params.value.w, fsrs_params.value.m);
+        ? new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.short_term)
+        : new FsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.short_term);
 
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {

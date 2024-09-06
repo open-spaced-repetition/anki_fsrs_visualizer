@@ -5,7 +5,8 @@ export interface SliderInfo {
 }
 
 // https://github.com/open-spaced-repetition/fsrs-rs/blob/main/src/inference.rs
-export const default_parameters = [0.5701, 1.4436, 4.1386, 10.9355, 5.1443, 1.2006, 0.8627, 0.0362, 1.6290, 0.1342, 1.0166, 2.1174, 0.0839, 0.3204, 1.4676, 0.2190, 2.8237];
+export const default_parameters = [0.4072, 1.1829, 3.1262, 15.4722, 7.2102, 0.5316, 1.0651, 0.0234, 1.616, 0.1544, 1.0824, 1.9813,
+    0.0953, 0.2975, 2.2042, 0.2407, 2.9466, 0.5034, 0.6567];
 
 export const initial_reviews: number[][] = [
     [3, 3, 3, 3],
@@ -16,7 +17,7 @@ export const initial_reviews: number[][] = [
     [4, 3, 3, 1],
 ];
 
-// https://github.com/open-spaced-repetition/fsrs-rs/blob/main/src/weight_clipper.rs
+// https://github.com/open-spaced-repetition/fsrs-rs/blob/main/src/parameter_clipper.rs
 export const sliders: SliderInfo[] = [
     { name: "0. initial stability (Again)", min: 0.01, max: 100 },
     { name: "1. initial stability (Hard)", min: 0.01, max: 100 },
@@ -35,6 +36,8 @@ export const sliders: SliderInfo[] = [
     { name: "14. fail stability (exponent)", min: 0.01, max: 3 },
     { name: "15. stability (multiplier for Hard)", min: 0, max: 1 },
     { name: "16. stability (multiplier for Easy)", min: 1, max: 6 },
+    { name: "17. short-term stability (exponent)", min: 0.0, max: 2.0 },
+    { name: "18. short-term stability (exponent)", min: 0.0, max: 2.0 }
 ];
 
 export const additionalSliders: SliderInfo[] = [

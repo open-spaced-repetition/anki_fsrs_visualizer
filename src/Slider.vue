@@ -1,6 +1,6 @@
 <template>
     <div class="slider">
-        <div style="white-space: nowrap; width: 14em">{{ props.info.name }}</div>
+        <div style="white-space: nowrap; width: 18em">{{ props.info.name }}</div>
         <div>
             <input style="width: 5em;" type="number" step="0.01" v-model.number="model" :min="props.info.min"
                 :max="props.info.max" v-on:change="event => $emit('change', event)" />

@@ -5,12 +5,14 @@ export class FsrsCalculator implements IFsrsCalculator {
     readonly desiredR: number;
     readonly decay: number;
     readonly factor: number;
+    readonly enableShortTerm: boolean;
 
-    public constructor(w: number[], m: number[]) {
+    public constructor(w: number[], m: number[], shortTerm: boolean) {
         this.w = w;
         this.desiredR = m[0];
-        this.decay = -0.5; 
+        this.decay = -0.5;
         this.factor = 19.0 / 81.0;
+        this.enableShortTerm = shortTerm
     }
 
     calcInterval(r: number, s: number): number {
@@ -55,11 +57,29 @@ export class FsrsCalculator implements IFsrsCalculator {
     }
 
     calcStabilityShortTerm(s: number, g: number): number {
-        return s * Math.exp(this.w[17] * (g - 3 + this.w[18]))
+        return s * Math.exp(this.w[17] * (g - 3 + this.w[18]));
     }
 
     calcDisplayDifficulty(d: number) {
         return (d - 1.0) / 9.0 * 100.0;
+    }
+
+    calcState(state: number, grade: number, interval: number): number {
+        // state : 0 =New, 1=Learning, 2=Review, 3=Relearning
+        // grade : 1=Again, 2=Hard, 3=Good, 4=Easy
+        if (!this.enableShortTerm) {
+            return 2;
+        }
+        switch (state) {
+            case 0:
+                return grade == 4 ? 2 : 1;
+            case 1:
+            case 3:
+                return (grade == 1 || interval < 1) ? state : 2;
+            case 2:
+                return grade == 1 ? 3 : 2;
+        }
+        return state;
     }
 
     clamp(number: number, min: number, max: number) {
@@ -76,12 +96,13 @@ export class FsrsCalculator implements IFsrsCalculator {
         const displayDifficulty = this.calcDisplayDifficulty(difficulty);
         const interval = this.calcInterval(this.desiredR, stability);
         const cumulativeInterval = card.cumulativeInterval + interval;
+        const state = this.calcState(card.state, grade, interval);
 
-        return new Card(false, difficulty, displayDifficulty, stability, interval, cumulativeInterval, grade);
+        return new Card(state, difficulty, displayDifficulty, stability, interval, cumulativeInterval, grade);
     }
 
     private calcNextDifficulty(card: Card, grade: number): number {
-        if (card.new) {
+        if (card.state == 0) {
             return this.calcDifficultyStart(grade);
         } else {
             return this.calcDifficultyNormal(card.difficulty, grade);
@@ -89,17 +110,23 @@ export class FsrsCalculator implements IFsrsCalculator {
     }
 
     private calcNextStability(card: Card, grade: number, retention: number): number {
-        if (card.new) {
+        if (card.state == 0) {
             return this.calcStabilityStart(grade);
-        } else if (grade == 1) {
-            return this.calcStabilityFailed(card.difficulty, card.stability, retention);
         } else {
-            return this.calcStabilityNormal(card.difficulty, card.stability, retention, grade);
+            if (card.state == 1 || card.state == 3) {
+                return this.calcStabilityShortTerm(card.stability, grade);
+            } else {
+                if (grade == 1) {
+                    return this.calcStabilityFailed(card.difficulty, card.stability, retention);
+                } else {
+                    return this.calcStabilityNormal(card.difficulty, card.stability, retention, grade);
+                }
+            }
         }
     }
 
     public steps(reviews: number[]): Card[] {
-        let card = new Card(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
+        let card = new Card(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
         const list = [];
 
         for (const review of reviews) {

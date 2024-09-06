@@ -3,7 +3,7 @@ export interface IFsrsCalculator {
 }
 
 export class Card {
-    new: boolean;
+    state: number;
     difficulty: number;
     displayDifficulty: number;
     stability: number;
@@ -11,8 +11,8 @@ export class Card {
     cumulativeInterval: number;
     grade: number;
 
-    public constructor(n: boolean, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, grade: number) {
-        this.new = n;
+    public constructor(state: number, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, grade: number) {
+        this.state = state;
         this.difficulty = difficulty;
         this.displayDifficulty = displayDifficulty;
         this.stability = stability;

@@ -26,13 +26,13 @@ export class FsrsCalculator implements IFsrsCalculator {
     }
 
     calcDifficultyStart(g: number): number {
-        const d = this.w[4] - this.w[5] * (g - 3.0);
+        const d = this.w[4] - Math.exp((g - 1) * this.w[5]) + 1;
         return this.clamp(d, 1, 10);
     }
 
     calcDifficultyNormal(d: number, g: number): number {
         const dn = d - this.w[6] * (g - 3.0);
-        const dn2 = this.w[7] * this.calcDifficultyStart(3) + (1.0 - this.w[7]) * dn;
+        const dn2 = this.w[7] * this.calcDifficultyStart(4) + (1.0 - this.w[7]) * dn;
         return this.clamp(dn2, 1, 10);
     }
 
@@ -52,6 +52,10 @@ export class FsrsCalculator implements IFsrsCalculator {
 
     calcStabilityFailed(d: number, s: number, r: number): number {
         return this.w[11] * Math.pow(d, -this.w[12]) * (Math.pow(s + 1.0, this.w[13]) - 1.0) * this.calcRevExp(this.w[14], r);
+    }
+
+    calcStabilityShortTerm(s: number, g: number): number {
+        return s * Math.exp(this.w[17] * (g - 3 + this.w[18]))
     }
 
     calcDisplayDifficulty(d: number) {

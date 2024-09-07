@@ -25,13 +25,17 @@
             <label for="mode-interval">Interval</label>
         </div>
         <div>
-            <input id="mode-cumulativeInterval" type="radio" :value="nameof<Card>('cumulativeInterval')"
-                v-model="mode" />
-            <label for="mode-cumulativeInterval">Cumulative</label>
+            <input id="mode-stability" type="radio" :value="nameof<Card>('stability')" v-model="mode" />
+            <label for="mode-stability">Stability</label>
         </div>
         <div>
             <input id="mode-displayDifficulty" type="radio" :value="nameof<Card>('displayDifficulty')" v-model="mode" />
             <label for="mode-displayDifficulty">Difficulty</label>
+        </div>
+        <div>
+            <input id="mode-cumulativeInterval" type="radio" :value="nameof<Card>('cumulativeInterval')"
+                v-model="mode" />
+            <label for="mode-cumulativeInterval">CumulativeInterval</label>
         </div>
         <div>
             <input id="animation" type="checkbox" v-model="animation" />
@@ -48,12 +52,22 @@
         <Slider v-for="(slider, index) in sliders" :info="slider" v-model="fsrs_params.w[index]" v-on:change="commit" />
     </div>
     <table class="table-dataset">
-        <tr v-for="dataset in data.datasets">
-            <td>{{ dataset.label }}</td>
-            <td v-for="item in dataset.data">
-                {{ item.card.stability.toFixed(2) }}
-            </td>
-        </tr>
+        <thead>
+            <tr>
+                <td>Grade</td>
+                <td v-for="label in data.labels">
+                    {{ modeOf(mode) }}-{{ label }}
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="dataset in data.datasets">
+                <td>{{ dataset.label }}</td>
+                <td v-for="item in dataset.data">
+                    {{ cardDataFormat(item.card, mode) }}
+                </td>
+            </tr>
+        </tbody>
     </table>
     <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" style="font-size: 75%;">Github</a>
 </template>
@@ -100,6 +114,7 @@ textarea {
 
 .table-dataset {
     border-collapse: collapse;
+    margin-top: 4px;
 }
 
 .table-dataset tr:nth-child(even) {
@@ -109,6 +124,7 @@ textarea {
 .table-dataset td {
     border: 1px solid #ddd;
     text-align: right;
+    padding: 4px;
 }
 </style>
 
@@ -139,7 +155,29 @@ ChartJS.register(Title, Tooltip, Legend, PointElement, LineElement, CategoryScal
 
 function nameof<T>(name: keyof T) { return name; }
 
-const mode = ref<keyof Card>('interval');
+function modeOf(mode: keyof Card) {
+    if (mode === 'interval') {
+        return 'Ivl';
+    } else if (mode === 'stability') {
+        return 'S';
+    } else if (mode === 'displayDifficulty') {
+        return 'D';
+    } else if (mode === 'cumulativeInterval') {
+        return 'CIvl';
+    } else {
+        return '';
+    }
+}
+
+function cardDataFormat(card: Card, mode: keyof Card) {
+    if (mode === 'interval' || mode === 'cumulativeInterval') {
+        return card[mode].toFixed(0);
+    } else {
+        return card[mode].toFixed(2)
+    }
+}
+
+const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 const names = ['', 'Again', 'Hard', 'Good', 'Easy'];
 

@@ -40,7 +40,7 @@ export class TsFsrsCalculator {
             const displayDifficulty = this.calcDisplayDifficulty(fsrs_card.difficulty);
             const interval = fsrs_card.scheduled_days;
             const cumulativeInterval = card.cumulativeInterval + interval;
-
+            card.cumulativeInterval = cumulativeInterval;
             list.push(new Card(fsrs_card.state, fsrs_card.difficulty, displayDifficulty, fsrs_card.stability, interval, cumulativeInterval, review));
         }
 

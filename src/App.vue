@@ -37,13 +37,9 @@
             <input id="animation" type="checkbox" v-model="animation" />
             <label for="animation">Animation</label>
         </div>
-        <div>
-            <input id="tsfsrs" type="checkbox" v-model="tsfsrs" />
-            <label for="tsfsrs">ts-fsrs</label>
-        </div>
-        <div>
+        <div :title="short_term_desc">
             <input id="short_term" type="checkbox" v-model="fsrs_params.short_term" />
-            <label for="short_term" :title="short_term_desc">Short-term</label>
+            <label for="short_term">Short-term</label>
         </div>
     </div>
     <div style="font-size: 75%; width: 100%;">
@@ -130,9 +126,7 @@ import {
     Colors,
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
-import { Card, type IFsrsCalculator } from "./IFsrsCalculator";
-import { FsrsCalculator } from './fsrsCalculator';
-import { TsFsrsCalculator } from './tsFsrsCalculator';
+import { Card, TsFsrsCalculator } from './tsFsrsCalculator';
 import { sliders, additionalSliders, default_parameters, initial_reviews } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
@@ -145,16 +139,15 @@ ChartJS.register(Title, Tooltip, Legend, PointElement, LineElement, CategoryScal
 
 function nameof<T>(name: keyof T) { return name; }
 
-const mode = ref<keyof Card>("interval");
+const mode = ref<keyof Card>('interval');
 const animation = ref(true);
-const tsfsrs = ref(false);
-const names = ["", "Again", "Hard", "Good", "Easy"];
+const names = ['', 'Again', 'Hard', 'Good', 'Easy'];
 
-const short_term_desc= ref('When disabled, this allow user to skip the short-term scheduler and directly switch to the long-term scheduler.')
+const short_term_desc = 'When disabled, this allow user to skip the short-term scheduler and directly switch to the long-term scheduler.'
 
 //can't disable animation using reactive options, so using watch
 watch(animation, a => {
-    if (typeof options.animation == "object") {
+    if (typeof options.animation == 'object') {
         options.animation.duration = (a ? 500 : 0);
     }
 });
@@ -165,7 +158,7 @@ const options = createOptions({
         return `Days: ${unique.join(', ')}`;
     },
     tooltip_function: (item: MyData) => {
-        const review_text = item.review.join("");
+        const review_text = item.review.join('');
         return `${review_text}: ${names[item.x]}, Stability: ${item.card.stability.toFixed(2)}, Difficulty: ${item.card.displayDifficulty.toFixed(0)}%`;
     }
 });
@@ -196,7 +189,7 @@ const initial_m = [0.9];
 const fsrs_params = ref({
     w: [...default_parameters],
     m: [...initial_m],
-    short_term: true,
+    short_term: false,
 });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
@@ -207,16 +200,14 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-    const calc: IFsrsCalculator = tsfsrs.value
-        ? new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.short_term)
-        : new FsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.short_term);
+    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.short_term);
 
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {
         labels: createLabels(),
         datasets: reviews.value.map(review => {
             return {
-                label: review.join(""),
+                label: review.join(''),
                 pointRadius: 4,
                 pointHoverRadius: 5,
                 data: calc.steps(review).map(a => convertCardToMyData(a, review)),
@@ -229,8 +220,12 @@ const data = computed(createData);
 
 const w_text = computed({
     get: () => fsrs_params.value.w.map(f => f.toFixed(4)).join(', '),
-    set: (newValue) => fsrs_params.value.w = newValue.replace(', ', ',').split(',').map(parseFloat)
+    set: (newValue) => fsrs_params.value.w = resize_array(newValue.replace(', ', ',').split(',').map(a => parseFloat(a) || 0), default_parameters.length, 0.0)
 });
+
+function resize_array<T>(arr: T[], length: number, filler: T) : T[] {
+    return arr.concat(new Array(Math.max(length - arr.length, 0)).fill(filler));
+}
 
 function reset() {
     for (let i in default_parameters) {

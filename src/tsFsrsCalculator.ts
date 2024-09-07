@@ -1,15 +1,14 @@
-import { State, createEmptyCard, fsrs, generatorParameters, type Grade } from "ts-fsrs";
-import { Card, type IFsrsCalculator } from "./IFsrsCalculator";
+import { createEmptyCard, fsrs, generatorParameters, type Grade } from "ts-fsrs";
 
-export class TsFsrsCalculator implements IFsrsCalculator {
+export class TsFsrsCalculator {
     readonly w: number[];
-    readonly desiredR: number;
-    readonly enableShortTerm: boolean;
+    readonly request_retention: number;
+    readonly enable_short_term: boolean;
 
     public constructor(w: number[], m: number[], enable: boolean) {
         this.w = w;
-        this.desiredR = m[0];
-        this.enableShortTerm = enable;
+        this.request_retention = m[0];
+        this.enable_short_term = enable;
     }
 
     calcDisplayDifficulty(d: number) {
@@ -24,8 +23,8 @@ export class TsFsrsCalculator implements IFsrsCalculator {
 
         const f = fsrs(generatorParameters({
             w: this.w,
-            request_retention: this.desiredR,
-            enable_short_term: this.enableShortTerm
+            request_retention: this.request_retention,
+            enable_short_term: this.enable_short_term
         }));
 
         for (const review of reviews) {
@@ -46,5 +45,25 @@ export class TsFsrsCalculator implements IFsrsCalculator {
         }
 
         return list;
+    }
+}
+
+export class Card {
+    state: number;
+    difficulty: number;
+    displayDifficulty: number;
+    stability: number;
+    interval: number;
+    cumulativeInterval: number;
+    grade: number;
+
+    public constructor(state: number, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, grade: number) {
+        this.state = state;
+        this.difficulty = difficulty;
+        this.displayDifficulty = displayDifficulty;
+        this.stability = stability;
+        this.interval = interval;
+        this.cumulativeInterval = cumulativeInterval;
+        this.grade = grade;
     }
 }

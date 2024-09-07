@@ -193,7 +193,7 @@ watch(animation, a => {
 const options = createOptions({
     title_function: (items: MyData[]) => {
         const unique = [...new Set(items.map(a => a.y))]
-        return `Days: ${unique.join(', ')}`;
+        return `${mode.value}: ${unique.join(', ')}`;
     },
     tooltip_function: (item: MyData) => {
         const review_text = item.review.join('');

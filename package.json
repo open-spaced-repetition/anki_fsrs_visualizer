@@ -17,7 +17,8 @@
         "chartjs-plugin-zoom": "^2.0.1",
         "ts-fsrs": "^4.1.3",
         "vue": "^3.5.3",
-        "vue-chartjs": "^5.3.1"
+        "vue-chartjs": "^5.3.1",
+        "vue-router": "^4.4.5"
     },
     "devDependencies": {
         "@tsconfig/node20": "^20.1.4",

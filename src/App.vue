@@ -42,8 +42,8 @@
             <label for="animation">Animation</label>
         </div>
         <div :title="short_term_desc">
-            <input id="short_term" type="checkbox" v-model="fsrs_params.short_term" />
-            <label for="short_term">Short-term</label>
+            <input id="enable_short_term" type="checkbox" v-model="fsrs_params.enable_short_term" />
+            <label for="enable_short_term">Short-term</label>
         </div>
     </div>
     <div style="font-size: 75%; width: 100%;">
@@ -129,7 +129,7 @@ textarea {
 </style>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, watchEffect } from 'vue';
 import {
     Chart as ChartJS,
     Title,
@@ -150,23 +150,24 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { createOptions } from './chartOptions.js';
 import { Line } from 'vue-chartjs';
 import Slider from './Slider.vue';
+import { useRouter, useRoute } from 'vue-router';
+
+const router = useRouter();
+const route = useRoute();
 
 ChartJS.register(Title, Tooltip, Legend, PointElement, LineElement, CategoryScale, LinearScale, Colors, zoomPlugin, ChartDataLabels);
 
 function nameof<T>(name: keyof T) { return name; }
 
 function modeOf(mode: keyof Card) {
-    if (mode === 'interval') {
-        return 'Ivl';
-    } else if (mode === 'stability') {
-        return 'S';
-    } else if (mode === 'displayDifficulty') {
-        return 'D';
-    } else if (mode === 'cumulativeInterval') {
-        return 'CIvl';
-    } else {
-        return '';
-    }
+    const modeMap: { [key in keyof Card]?: string } = {
+        interval: 'Ivl',
+        stability: 'S',
+        displayDifficulty: 'D',
+        cumulativeInterval: 'CIvl'
+    };
+
+    return modeMap[mode] || '';
 }
 
 function cardDataFormat(card: Card, mode: keyof Card) {
@@ -227,8 +228,21 @@ const initial_m = [0.9];
 const fsrs_params = ref({
     w: [...default_parameters],
     m: [...initial_m],
-    short_term: false,
+    enable_short_term: false,
 });
+
+const query_w = computed(() => route.query.w as string || '');
+const query_m = computed(() => route.query.m as string || '');
+
+watch(query_w, newValue => {
+    if (newValue)
+        fsrs_params.value.w = parse_parameters(newValue, default_parameters.length);
+}, { immediate: true });
+
+watch(query_m, newValue => {
+    if (newValue)
+        fsrs_params.value.m = parse_parameters(newValue, initial_m.length);
+}, { immediate: true });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
 
@@ -238,7 +252,7 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.short_term);
+    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.enable_short_term);
 
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {
@@ -256,24 +270,33 @@ function createData(): ChartData<'line', MyData[]> {
 
 const data = computed(createData);
 
+function parse_parameters(value: string, length: number) {
+    return resize_array(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), length, 0.0)
+}
+
+function params_to_string(value: number[], fixed: number, sep: string) {
+    return value.map((f: number) => f.toFixed(fixed)).join(sep);
+}
+
 const w_text = computed({
-    get: () => fsrs_params.value.w.map(f => f.toFixed(4)).join(', '),
-    set: (newValue) => fsrs_params.value.w = resize_array(newValue.replace(', ', ',').split(',').map(a => parseFloat(a) || 0), default_parameters.length, 0.0)
+    get: () => params_to_string(fsrs_params.value.w, 4, ', '),
+    set: (newValue) => fsrs_params.value.w = parse_parameters(newValue, default_parameters.length),
 });
+
+watch(fsrs_params, (newValue) => {
+    router.replace({ query: {
+        w: params_to_string(newValue.w, 4, ','),
+        m: params_to_string(newValue.m, 2, ','),
+    } });
+}, { deep: true});
 
 function resize_array<T>(arr: T[], length: number, filler: T) : T[] {
     return arr.concat(new Array(Math.max(length - arr.length, 0)).fill(filler));
 }
 
 function reset() {
-    for (let i in default_parameters) {
-        fsrs_params.value.w[i] = default_parameters[i];
-    }
-
-    for (let i in initial_m) {
-        fsrs_params.value.m[i] = initial_m[i];
-    }
-
+    fsrs_params.value.w = [...default_parameters];
+    fsrs_params.value.m = [...initial_m];
     commit();
 }
 

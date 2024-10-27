@@ -5,10 +5,10 @@ export class TsFsrsCalculator {
     readonly request_retention: number;
     readonly enable_short_term: boolean;
 
-    public constructor(w: number[], m: number[], enable: boolean) {
+    public constructor(w: number[], m: number[], enable_short_term: boolean) {
         this.w = w;
         this.request_retention = m[0];
-        this.enable_short_term = enable;
+        this.enable_short_term = enable_short_term;
     }
 
     calcDisplayDifficulty(d: number) {

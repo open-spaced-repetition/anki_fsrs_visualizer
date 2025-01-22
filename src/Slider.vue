@@ -2,7 +2,7 @@
     <div class="slider">
         <div style="white-space: nowrap; width: 16em">{{ props.info.name }}</div>
         <div>
-            <input style="width: 5em;" type="number" step="0.001" v-model.number="model" :min="props.info.min"
+            <input style="width: 5em;" type="number" :step="props.info.step" v-model.number="model" :min="props.info.min"
                 :max="props.info.max" v-on:change="event => $emit('change', event)" />
         </div>
         <div style="flex: 1; min-width: 10em; display: flex; column-gap: 5px;">
@@ -10,7 +10,7 @@
                 {{ props.info.min }}
             </div>
             <div style="flex: 1;">
-                <input style="width: 100%;" type="range" step="0.001" v-model.number="model" :min="props.info.min"
+                <input style="width: 100%;" type="range" :step="props.info.step" v-model.number="model" :min="props.info.min"
                     :max="props.info.max" v-on:change="event => $emit('change', event)" />
             </div>
             <div class="minmax">

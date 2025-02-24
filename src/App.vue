@@ -233,6 +233,7 @@ const fsrs_params = ref({
 
 const query_w = computed(() => route.query.w as string || '');
 const query_m = computed(() => route.query.m as string || '');
+const query_e = computed(() => route.query.e as string || '');
 
 watch(query_w, newValue => {
     if (newValue)
@@ -242,6 +243,11 @@ watch(query_w, newValue => {
 watch(query_m, newValue => {
     if (newValue)
         fsrs_params.value.m = parse_parameters(newValue, initial_m.length);
+}, { immediate: true });
+
+watch(query_m, newValue => {
+    if (newValue)
+        fsrs_params.value.enable_short_term = query_e.value ==='1'|| query_e.value === 'true';
 }, { immediate: true });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
@@ -287,6 +293,7 @@ watch(fsrs_params, (newValue) => {
     router.replace({ query: {
         w: params_to_string(newValue.w, 4, ','),
         m: params_to_string(newValue.m, 2, ','),
+        e: newValue.enable_short_term ? '1' : undefined,
     } });
 }, { deep: true});
 

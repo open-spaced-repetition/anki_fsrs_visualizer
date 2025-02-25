@@ -245,9 +245,8 @@ watch(query_m, newValue => {
         fsrs_params.value.m = parse_parameters(newValue, initial_m.length);
 }, { immediate: true });
 
-watch(query_m, newValue => {
-    if (newValue)
-        fsrs_params.value.enable_short_term = query_e.value ==='1'|| query_e.value === 'true';
+watch(query_e, newValue => {
+    fsrs_params.value.enable_short_term = newValue === '1' || newValue === 'true';
 }, { immediate: true });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });

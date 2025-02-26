@@ -8,7 +8,7 @@
             <textarea v-model="reviews_text"></textarea>
         </div>
         <div class="chart-container">
-            <Line :data="data" :options="options" />
+            <Line ref="chartRef" :data="data" :options="options" />
         </div>
     </div>
     <div class="whole">
@@ -39,6 +39,10 @@
         <div>
             <input id="animation" type="checkbox" v-model="animation" />
             <label for="animation">Animation</label>
+        </div>
+        <div>
+            <input id="log-scale" type="checkbox" v-model="useLogScale" />
+            <label for="log-scale">Logarithmic</label>
         </div>
         <div :title="short_term_desc">
             <input id="enable_short_term" type="checkbox" v-model="fsrs_params.enable_short_term" />
@@ -166,6 +170,7 @@ import {
     LineElement,
     CategoryScale,
     LinearScale,
+    LogarithmicScale,
     Colors,
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
@@ -182,7 +187,21 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 
-ChartJS.register(Title, Tooltip, Legend, PointElement, LineElement, CategoryScale, LinearScale, Colors, zoomPlugin, ChartDataLabels);
+ChartJS.register(
+    Title,
+    Tooltip,
+    Legend,
+    PointElement,
+    LineElement,
+    CategoryScale,
+    LinearScale,
+    LogarithmicScale,
+    Colors,
+    zoomPlugin,
+    ChartDataLabels
+);
+
+const chartRef = ref<typeof Line | null>(null);
 
 function nameof<T>(name: keyof T) { return name; }
 
@@ -207,18 +226,19 @@ function cardDataFormat(card: Card, mode: keyof Card) {
 
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
+const useLogScale = ref(false);
 const names = ['', 'Again', 'Hard', 'Good', 'Easy'];
 
 const short_term_desc = 'When disabled, this allow user to skip the short-term scheduler and directly switch to the long-term scheduler.';
 
 //can't disable animation using reactive options, so using watch
 watch(animation, a => {
-    if (typeof options.animation === 'object') {
-        options.animation.duration = a ? 500 : 0;
+    if (typeof options.value.animation === 'object') {
+        options.value.animation.duration = a ? 500 : 0;
     }
 });
 
-const options = createOptions({
+const options = ref(createOptions({
     title_function: (items: MyData[]) => {
         const unique = [...new Set(items.map(a => a.y))];
         return `${mode.value}: ${unique.join(', ')}`;
@@ -227,6 +247,24 @@ const options = createOptions({
         const review_text = item.review.join('');
         return `${review_text}: ${names[item.x]}, Stability: ${item.card.stability.toFixed(2)}, Difficulty: ${item.card.displayDifficulty.toFixed(0)}%`;
     },
+}));
+
+watch(useLogScale, (newVal) => {
+    //need this for chart.js to see updates on scale
+    options.value = {
+        ...options.value,
+        scales: {
+            ...options.value.scales,
+            y: {
+                ...options.value.scales.y,
+                min: newVal ? 1 : 0,
+                max: newVal ? 1000 : 75,
+                type: newVal ? 'logarithmic' : 'linear',
+            }
+        }
+    };
+
+    chartRef.value.chart.update();
 });
 
 function getDataLabel(card: Card) {

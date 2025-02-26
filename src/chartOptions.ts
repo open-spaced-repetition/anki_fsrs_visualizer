@@ -33,6 +33,7 @@ export function createOptions(params: { title_function: (raw: any) => string, to
                 display: true,
                 min: 0,
                 max: 75,
+                type: 'linear',
                 ticks: {
                     format: {
                         minimumFractionDigits: 0,

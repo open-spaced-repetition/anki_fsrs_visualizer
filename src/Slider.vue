@@ -17,36 +17,7 @@
         </div>
     </div>
 </template>
-<style>
-.slider {
-    display: flex;
-    align-items: center;
-    column-gap: 3px;
-    flex-wrap: wrap;
-}
-.slider-name {
-    white-space: nowrap;
-    width: 16em;
-}
-.slider-number {
-    width: 6em;
-}
-.slider-range-container {
-    flex: 1;
-    min-width: 10em;
-    display: flex;
-    column-gap: 5px;
-}
-.minmax {
-    width: 2.0em;
-}
-.minmax-rt {
-    text-align: right;
-}
-.slider-range-input {
-    width: 100%;
-}
-</style>
+<style src="./assets/slider.css" scoped></style>
 <script lang="ts" setup>
 import { type SliderInfo } from './sliderInfo';
 

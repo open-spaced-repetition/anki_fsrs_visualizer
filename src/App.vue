@@ -226,7 +226,7 @@ const options = createOptions({
     tooltip_function: (item: MyData) => {
         const review_text = item.review.join('');
         return `${review_text}: ${names[item.x]}, Stability: ${item.card.stability.toFixed(2)}, Difficulty: ${item.card.displayDifficulty.toFixed(0)}%`;
-    }
+    },
 });
 
 function getDataLabel(card: Card) {
@@ -258,22 +258,10 @@ const fsrs_params = ref({
     enable_short_term: false,
 });
 
-const query_w = computed(() => route.query.w as string || '');
-const query_m = computed(() => route.query.m as string || '');
-const query_e = computed(() => route.query.e as string || '');
-
-watch(query_w, newValue => {
-    if (newValue)
-        fsrs_params.value.w = parse_parameters(newValue, default_parameters.length);
-}, { immediate: true });
-
-watch(query_m, newValue => {
-    if (newValue)
-        fsrs_params.value.m = parse_parameters(newValue, initial_m.length);
-}, { immediate: true });
-
-watch(query_e, newValue => {
-    fsrs_params.value.enable_short_term = newValue === '1' || newValue === 'true';
+watch(() => route.query, (query) => {
+    fsrs_params.value.w = parse_parameters(query.w as string || '', default_parameters);
+    fsrs_params.value.m = parse_parameters(query.m as string || '', initial_m);
+    fsrs_params.value.enable_short_term = query.e === '1' || query.e === 'true';
 }, { immediate: true });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
@@ -302,8 +290,9 @@ function createData(): ChartData<'line', MyData[]> {
 
 const data = computed(createData);
 
-function parse_parameters(value: string, length: number) {
-    return resize_array(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), length, 0.0)
+function parse_parameters(value: string, default_value: number[]) {
+    if (!value) return [...default_value];
+    return resize_array(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), default_value.length, 0.0);
 }
 
 function params_to_string(value: number[], fixed: number, sep: string) {

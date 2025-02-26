@@ -7,15 +7,14 @@
             <div class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</div>
             <textarea v-model="reviews_text"></textarea>
         </div>
-        <div style="position: relative; flex: 1;">
+        <div class="chart-container">
             <Line :data="data" :options="options" />
         </div>
     </div>
     <div class="whole">
-        <input v-model.lazy="w_text" v-on:change="commit"
-            style="height: 100%; width: 100%; box-sizing: border-box; resize: none;" />
+        <input class="whole-input" v-model.lazy="w_text" @change="commit" />
     </div>
-    <div style="display: flex; flex-wrap: wrap; gap: 2px; align-items: center;">
+    <div class="action-bar">
         <button @click="reset">Reset parameters</button>
         <button @click="undo" :disabled='!canUndo'>Undo</button>
         <button @click="redo" :disabled='!canRedo'>Redo</button>
@@ -46,10 +45,10 @@
             <label for="enable_short_term">Short-term</label>
         </div>
     </div>
-    <div style="font-size: 75%; width: 100%;">
+    <div class="slider-container">
         <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]"
-            v-on:change="commit" />
-        <Slider v-for="(slider, index) in sliders" :info="slider" v-model="fsrs_params.w[index]" v-on:change="commit" />
+            @change="commit" />
+        <Slider v-for="(slider, index) in sliders" :info="slider" v-model="fsrs_params.w[index]" @change="commit" />
     </div>
     <table class="table-dataset">
         <thead>
@@ -69,7 +68,7 @@
             </tr>
         </tbody>
     </table>
-    <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" style="font-size: 75%;">Github</a>
+    <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" class="github-link">Github</a>
 </template>
 <style>
 textarea {
@@ -125,6 +124,34 @@ textarea {
     border: 1px solid #ddd;
     text-align: right;
     padding: 4px;
+}
+
+.chart-container {
+    position: relative;
+    flex: 1;
+}
+
+.whole-input {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+}
+
+.action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    align-items: center;
+}
+
+.slider-container {
+    font-size: 75%;
+    width: 100%;
+}
+
+.github-link {
+    font-size: 75%;
 }
 </style>
 

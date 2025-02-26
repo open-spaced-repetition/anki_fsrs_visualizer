@@ -156,7 +156,7 @@ textarea {
 </style>
 
 <script lang="ts" setup>
-import { ref, computed, watch, watchEffect } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
     Chart as ChartJS,
     Title,
@@ -201,7 +201,7 @@ function cardDataFormat(card: Card, mode: keyof Card) {
     if (mode === 'interval' || mode === 'cumulativeInterval') {
         return card[mode].toFixed(0);
     } else {
-        return card[mode].toFixed(2)
+        return card[mode].toFixed(2);
     }
 }
 
@@ -209,18 +209,18 @@ const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 const names = ['', 'Again', 'Hard', 'Good', 'Easy'];
 
-const short_term_desc = 'When disabled, this allow user to skip the short-term scheduler and directly switch to the long-term scheduler.'
+const short_term_desc = 'When disabled, this allow user to skip the short-term scheduler and directly switch to the long-term scheduler.';
 
 //can't disable animation using reactive options, so using watch
 watch(animation, a => {
-    if (typeof options.animation == 'object') {
-        options.animation.duration = (a ? 500 : 0);
+    if (typeof options.animation === 'object') {
+        options.animation.duration = a ? 500 : 0;
     }
 });
 
 const options = createOptions({
     title_function: (items: MyData[]) => {
-        const unique = [...new Set(items.map(a => a.y))]
+        const unique = [...new Set(items.map(a => a.y))];
         return `${mode.value}: ${unique.join(', ')}`;
     },
     tooltip_function: (item: MyData) => {
@@ -268,12 +268,12 @@ const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManual
 
 function createLabels() {
     const max = Math.max(...reviews.value.map(a => a.length));
-    return Array.from({ length: max }, (_, review) => `${review}`)
+    return Array.from({ length: max }, (_, review) => `${review}`);
 }
 
 function createData(): ChartData<'line', MyData[]> {
     const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.enable_short_term);
-
+    
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {
         labels: createLabels(),
@@ -310,7 +310,7 @@ watch(fsrs_params, (newValue) => {
         m: params_to_string(newValue.m, 2, ','),
         e: newValue.enable_short_term ? '1' : undefined,
     } });
-}, { deep: true});
+}, { deep: true });
 
 function resize_array<T>(arr: T[], length: number, filler: T) : T[] {
     return arr.concat(new Array(Math.max(length - arr.length, 0)).fill(filler));

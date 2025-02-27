@@ -21,7 +21,7 @@ const zoomOptions: ZoomPluginOptions = {
     }
 };
 
-export function createOptions(params: { title_function: (raw: any) => string, tooltip_function: (raw: any) => string }): ChartOptions<'line'> {
+export function createOptions(params: { title_function: (raw: any) => string, tooltip_function: (raw: any) => string; }): ChartOptions<'line'> {
     return {
         responsive: true,
         maintainAspectRatio: false,

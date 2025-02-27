@@ -244,7 +244,7 @@ function createLabels() {
 
 function createData(): ChartData<'line', MyData[]> {
     const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.enable_short_term);
-    
+
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {
         labels: createLabels(),
@@ -276,14 +276,16 @@ const w_text = computed({
 });
 
 watch(fsrs_params, (newValue) => {
-    router.replace({ query: {
-        w: params_to_string(newValue.w, 4, ','),
-        m: params_to_string(newValue.m, 2, ','),
-        e: newValue.enable_short_term ? '1' : undefined,
-    } });
+    router.replace({
+        query: {
+            w: params_to_string(newValue.w, 4, ','),
+            m: params_to_string(newValue.m, 2, ','),
+            e: newValue.enable_short_term ? '1' : undefined,
+        }
+    });
 }, { deep: true });
 
-function resize_array<T>(arr: T[], length: number, filler: T) : T[] {
+function resize_array<T>(arr: T[], length: number, filler: T): T[] {
     return arr.concat(new Array(Math.max(length - arr.length, 0)).fill(filler));
 }
 

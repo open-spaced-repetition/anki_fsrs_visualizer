@@ -1,8 +1,8 @@
 export interface SliderInfo {
-    name: string
-    min: number
-    max: number
-    step: number
+    name: string;
+    min: number;
+    max: number;
+    step: number;
 }
 
 // https://github.com/open-spaced-repetition/ts-fsrs/blob/main/src/fsrs/default.ts

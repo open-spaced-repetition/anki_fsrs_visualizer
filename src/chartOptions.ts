@@ -1,6 +1,29 @@
-import type { ChartOptions, TooltipItem, TooltipModel } from 'chart.js';
+import type { ChartOptions, ScaleOptionsByType, TooltipItem, TooltipModel } from 'chart.js';
 import type { ZoomPluginOptions } from 'chartjs-plugin-zoom/types/options';
-import type { TypedChartComponent } from 'node_modules/vue-chartjs/dist/types';
+
+export const linearScaleOptions = {
+    type: 'linear',
+    min: 0,
+    max: 75,
+    ticks: {
+        format: {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        },
+    },
+} as ScaleOptionsByType<'linear'>;
+
+export const logarithmicScaleOptions = {
+    type: 'logarithmic',
+    min: 1,
+    max: 1000,
+    ticks: {
+        format: {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 5,
+        },
+    }
+} as ScaleOptionsByType<'logarithmic'>;
 
 const zoomOptions: ZoomPluginOptions = {
     limits: {
@@ -29,18 +52,7 @@ export function createOptions(params: { title_function: (raw: any) => string, to
             duration: 500,
         },
         scales: {
-            y: {
-                display: true,
-                min: 0,
-                max: 75,
-                type: 'linear',
-                ticks: {
-                    format: {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                    },
-                }
-            }
+            y: linearScaleOptions,
         },
         plugins: {
             zoom: zoomOptions,

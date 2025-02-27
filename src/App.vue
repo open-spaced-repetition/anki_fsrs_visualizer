@@ -89,13 +89,13 @@ import {
     LogarithmicScale,
     Colors,
 } from 'chart.js';
-import type { ChartData, ChartDataset, LinearScaleOptions, LogarithmicScaleOptions } from 'chart.js';
+import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, TsFsrsCalculator } from './tsFsrsCalculator';
 import { sliders, additionalSliders, default_parameters, initial_reviews } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { createOptions } from './chartOptions.js';
+import { createOptions, linearScaleOptions, logarithmicScaleOptions } from './chartOptions.js';
 import { Line } from 'vue-chartjs';
 import Slider from './Slider.vue';
 import { useRouter, useRoute } from 'vue-router';
@@ -165,36 +165,18 @@ const options = ref(createOptions({
     },
 }));
 
-watch(useLogScale, (newVal) => {
+watch(useLogScale, (newUseLogScale) => {
     if (options.value.scales && chartRef.value) {
-        //need this for chart.js to see updates on scale
-        if (newVal) {
-            options.value = {
-                ...options.value,
-                scales: {
-                    ...options.value.scales,
-                    y: {
-                        ...options.value.scales.y,
-                        min: 1,
-                        max: 1000,
-                        type: 'logarithmic',
-                    } as unknown as LogarithmicScaleOptions
-                }
-            };
-        } else {
-            options.value = {
-                ...options.value,
-                scales: {
-                    ...options.value.scales,
-                    y: {
-                        ...options.value.scales.y,
-                        min: 0,
-                        max: 75,
-                        type: 'linear',
-                    } as unknown as LinearScaleOptions
-                }
-            };
-        }
+        const scaleOptions = newUseLogScale ? logarithmicScaleOptions : linearScaleOptions;
+
+        //need this for chart.js to see updates on scales
+        options.value = {
+            ...options.value,
+            scales: {
+                ...options.value.scales,
+                y: scaleOptions,
+            }
+        };
 
         chartRef.value.chart.update();
     }

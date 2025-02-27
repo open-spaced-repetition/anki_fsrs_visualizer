@@ -89,7 +89,7 @@ import {
     LogarithmicScale,
     Colors,
 } from 'chart.js';
-import type { ChartData, ChartDataset } from 'chart.js';
+import type { ChartData, ChartDataset, LinearScaleOptions, LogarithmicScaleOptions } from 'chart.js';
 import { Card, TsFsrsCalculator } from './tsFsrsCalculator';
 import { sliders, additionalSliders, default_parameters, initial_reviews } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
@@ -166,21 +166,38 @@ const options = ref(createOptions({
 }));
 
 watch(useLogScale, (newVal) => {
-    //need this for chart.js to see updates on scale
-    options.value = {
-        ...options.value,
-        scales: {
-            ...options.value.scales,
-            y: {
-                ...options.value.scales.y,
-                min: newVal ? 1 : 0,
-                max: newVal ? 1000 : 75,
-                type: newVal ? 'logarithmic' : 'linear',
-            }
+    if (options.value.scales && chartRef.value) {
+        //need this for chart.js to see updates on scale
+        if (newVal) {
+            options.value = {
+                ...options.value,
+                scales: {
+                    ...options.value.scales,
+                    y: {
+                        ...options.value.scales.y,
+                        min: 1,
+                        max: 1000,
+                        type: 'logarithmic',
+                    } as unknown as LogarithmicScaleOptions
+                }
+            };
+        } else {
+            options.value = {
+                ...options.value,
+                scales: {
+                    ...options.value.scales,
+                    y: {
+                        ...options.value.scales.y,
+                        min: 0,
+                        max: 75,
+                        type: 'linear',
+                    } as unknown as LinearScaleOptions
+                }
+            };
         }
-    };
 
-    chartRef.value.chart.update();
+        chartRef.value.chart.update();
+    }
 });
 
 function getDataLabel(card: Card) {
@@ -255,7 +272,7 @@ function params_to_string(value: number[], fixed: number, sep: string) {
 
 const w_text = computed({
     get: () => params_to_string(fsrs_params.value.w, 4, ', '),
-    set: (newValue) => fsrs_params.value.w = parse_parameters(newValue, default_parameters.length),
+    set: (newValue) => fsrs_params.value.w = parse_parameters(newValue, default_parameters),
 });
 
 watch(fsrs_params, (newValue) => {

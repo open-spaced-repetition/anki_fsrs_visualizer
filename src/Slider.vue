@@ -24,7 +24,7 @@ import { type SliderInfo } from './sliderInfo';
 const props = defineProps<{ info: SliderInfo }>();
 
 const emit = defineEmits<{
-    change: (payload: Event) => void
+    change: [Event],
 }>();
 
 const model = defineModel<number>();

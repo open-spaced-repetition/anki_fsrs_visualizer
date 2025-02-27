@@ -20,14 +20,14 @@ export const logarithmicScaleOptions = {
     ticks: {
         format: {
             minimumFractionDigits: 0,
-            maximumFractionDigits: 5,
+            maximumFractionDigits: 2,
         },
     }
 } as ScaleOptionsByType<'logarithmic'>;
 
 const zoomOptions: ZoomPluginOptions = {
     limits: {
-        y: { min: 0, minRange: 10 },
+        y: { min: 0.01, minRange: 0.1 },
     },
     pan: {
         enabled: true,

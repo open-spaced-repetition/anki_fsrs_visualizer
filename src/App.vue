@@ -31,11 +31,16 @@
             <input id="mode-displayDifficulty" type="radio" :value="nameof<Card>('displayDifficulty')" v-model="mode" />
             <label for="mode-displayDifficulty">Difficulty</label>
         </div>
-        <div>
-            <input id="mode-cumulativeInterval" type="radio" :value="nameof<Card>('cumulativeInterval')"
-                v-model="mode" />
-            <label for="mode-cumulativeInterval">CumulativeInterval</label>
-        </div>
+      <div>
+        <input id="mode-cumulativeInterval" type="radio" :value="nameof<Card>('cumulativeInterval')"
+               v-model="mode" />
+        <label for="mode-cumulativeInterval">CumulativeInterval</label>
+      </div>
+      <div>
+        <input id="mode-load" type="radio" :value="nameof<Card>('dailyLoad')"
+               v-model="mode" />
+        <label for="mode-load">Daily Load (%)</label>
+      </div>
         <div>
             <input id="animation" type="checkbox" v-model="animation" />
             <label for="animation">Animation</label>

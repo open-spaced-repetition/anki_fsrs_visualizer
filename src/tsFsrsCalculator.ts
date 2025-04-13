@@ -15,6 +15,10 @@ export class TsFsrsCalculator {
         return (d - 1.0) / 9.0 * 100.0;
     }
 
+    calcDailyLoad(interval: number) {
+        return Math.round(1 / (interval ?? 1) * 10000.0) / 100.00;
+    }
+
     public steps(reviews: number[]): Card[] {
         let fsrs_card = createEmptyCard(new Date());
         const list = [];
@@ -37,8 +41,9 @@ export class TsFsrsCalculator {
 
             const displayDifficulty = this.calcDisplayDifficulty(fsrs_card.difficulty);
             const interval = fsrs_card.scheduled_days;
+            const dailyLoad = this.calcDailyLoad(interval)
             cumulativeInterval += interval;
-            list.push(new Card(fsrs_card.state, fsrs_card.difficulty, displayDifficulty, fsrs_card.stability, interval, cumulativeInterval, review));
+            list.push(new Card(fsrs_card.state, fsrs_card.difficulty, displayDifficulty, fsrs_card.stability, interval, dailyLoad, cumulativeInterval, review));
         }
 
         return list;
@@ -51,15 +56,17 @@ export class Card {
     displayDifficulty: number;
     stability: number;
     interval: number;
+    dailyLoad: number;
     cumulativeInterval: number;
     grade: number;
 
-    public constructor(state: number, difficulty: number, displayDifficulty: number, stability: number, interval: number, cumulativeInterval: number, grade: number) {
+    public constructor(state: number, difficulty: number, displayDifficulty: number, stability: number, interval: number, dailyLoad: number, cumulativeInterval: number, grade: number) {
         this.state = state;
         this.difficulty = difficulty;
         this.displayDifficulty = displayDifficulty;
         this.stability = stability;
         this.interval = interval;
+        this.dailyLoad = dailyLoad;
         this.cumulativeInterval = cumulativeInterval;
         this.grade = grade;
     }

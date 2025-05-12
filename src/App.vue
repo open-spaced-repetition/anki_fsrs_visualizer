@@ -2,6 +2,7 @@
     <div class="container-top">
         <div class="reviews">
             <div>
+                <div><b>FSRS-6</b></div>
                 <button @click="resetReviews">Reset reviews</button>
             </div>
             <div class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</div>

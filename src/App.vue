@@ -92,7 +92,7 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, TsFsrsCalculator } from './tsFsrsCalculator';
-import { sliders, additionalSliders, default_parameters, initial_reviews } from './sliderInfo';
+import { sliders, additionalSliders, default_w, initial_reviews } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -207,13 +207,13 @@ const reviews_text = computed({
 const initial_m = [0.9];
 
 const fsrs_params = ref({
-    w: [...default_parameters],
+    w: [...default_w],
     m: [...initial_m],
     enable_short_term: false,
 });
 
 watch(() => route.query, (query) => {
-    fsrs_params.value.w = parse_parameters(query.w as string || '', default_parameters);
+    fsrs_params.value.w = parse_parameters(query.w as string || '', default_w);
     fsrs_params.value.m = parse_parameters(query.m as string || '', initial_m);
     fsrs_params.value.enable_short_term = query.e === '1' || query.e === 'true';
 }, { immediate: true });
@@ -244,7 +244,7 @@ function createData(): ChartData<'line', MyData[]> {
 
 const data = computed(createData);
 
-function parse_parameters(value: string, default_value: number[]) {
+function parse_parameters(value: string, default_value: readonly number[]) {
     if (!value) return [...default_value];
     return resize_array(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), default_value.length, 0.0);
 }
@@ -255,7 +255,7 @@ function params_to_string(value: number[], fixed: number, sep: string) {
 
 const w_text = computed({
     get: () => params_to_string(fsrs_params.value.w, 4, ', '),
-    set: (newValue) => fsrs_params.value.w = parse_parameters(newValue, default_parameters),
+    set: (newValue) => fsrs_params.value.w = parse_parameters(newValue, default_w),
 });
 
 watch(fsrs_params, (newValue) => {
@@ -273,7 +273,7 @@ function resize_array<T>(arr: T[], length: number, filler: T): T[] {
 }
 
 function reset() {
-    fsrs_params.value.w = [...default_parameters];
+    fsrs_params.value.w = [...default_w];
     fsrs_params.value.m = [...initial_m];
     commit();
 }

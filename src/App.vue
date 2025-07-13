@@ -45,10 +45,6 @@
             <input id="log-scale" type="checkbox" v-model="useLogScale" />
             <label for="log-scale">Logarithmic</label>
         </div>
-        <div :title="short_term_desc">
-            <input id="enable_short_term" type="checkbox" v-model="fsrs_params.enable_short_term" />
-            <label for="enable_short_term">Short-term</label>
-        </div>
     </div>
     <div class="slider-container">
         <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]"
@@ -146,8 +142,6 @@ const animation = ref(true);
 const useLogScale = ref(false);
 const names = ['', 'Again', 'Hard', 'Good', 'Easy'];
 
-const short_term_desc = 'When disabled, this allow user to skip the short-term scheduler and directly switch to the long-term scheduler.';
-
 //can't disable animation using reactive options, so using watch
 watch(animation, a => {
     if (typeof options.value.animation === 'object') {
@@ -209,13 +203,11 @@ const initial_m = [0.9];
 const fsrs_params = ref({
     w: [...default_w],
     m: [...initial_m],
-    enable_short_term: false,
 });
 
 watch(() => route.query, (query) => {
     fsrs_params.value.w = parse_parameters(query.w as string || '', default_w);
     fsrs_params.value.m = parse_parameters(query.m as string || '', initial_m);
-    fsrs_params.value.enable_short_term = query.e === '1' || query.e === 'true';
 }, { immediate: true });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
@@ -226,7 +218,7 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, fsrs_params.value.enable_short_term);
+    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m);
 
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {
@@ -263,7 +255,6 @@ watch(fsrs_params, (newValue) => {
         query: {
             w: params_to_string(newValue.w, 4, ','),
             m: params_to_string(newValue.m, 2, ','),
-            e: newValue.enable_short_term ? '1' : undefined,
         }
     });
 }, { deep: true });

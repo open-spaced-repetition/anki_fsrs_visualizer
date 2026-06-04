@@ -57,6 +57,7 @@ export function createOptions(params: { title_function: (raw: any) => string, to
         plugins: {
             zoom: zoomOptions,
             datalabels: {
+                clip: true,
                 color: '#36A2EB',
                 textStrokeColor: 'white',
                 textStrokeWidth: 2,
@@ -68,6 +69,7 @@ export function createOptions(params: { title_function: (raw: any) => string, to
                 forceOverride: true,
             },
             tooltip: {
+                animation: false,
                 callbacks: {
                     title: function (this: TooltipModel<"line">, tooltipItems: TooltipItem<"line">[]) {
                         return params.title_function(tooltipItems.map(a => a.raw));

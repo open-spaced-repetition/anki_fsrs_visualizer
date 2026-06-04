@@ -140,7 +140,8 @@ function cardDataFormat(card: Card, mode: keyof Card) {
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 const useLogScale = ref(false);
-const names = ['', 'Again', 'Hard', 'Good', 'Easy'];
+const gradeNames = ['', 'Again', 'Hard', 'Good', 'Easy'];
+const stateNames = ['New', 'Learning', 'Review', 'Relearning'];
 
 //can't disable animation using reactive options, so using watch
 watch(animation, a => {
@@ -156,7 +157,14 @@ const options = ref(createOptions({
     },
     tooltip_function: (item: MyData) => {
         const review_text = item.review.join('');
-        return `${review_text}: ${names[item.x]}, Stability: ${item.card.stability.toFixed(2)}, Difficulty: ${item.card.displayDifficulty.toFixed(0)}%`;
+
+        const name = gradeNames[item.x];
+        const stability = item.card.stability.toFixed(2);
+        const displayDifficulty = item.card.displayDifficulty.toFixed(0);
+        const difficulty = item.card.difficulty.toFixed(2);
+        const state = stateNames[item.card.state];
+
+        return `${review_text}: ${name}, Stability: ${stability}, D: ${displayDifficulty}% (${difficulty}), State: ${state}`;
     },
 }));
 
@@ -178,7 +186,7 @@ watch(useLogScale, (newUseLogScale) => {
 });
 
 function getDataLabel(card: Card) {
-    return `${names[card.grade]} (Difficulty: ${card.displayDifficulty.toFixed(0)}%)`;
+    return `${gradeNames[card.grade]} (Difficulty: ${card.displayDifficulty.toFixed(0)}%)`;
 }
 
 function convertCardToMyData(card: Card, review: number[]): MyData {

@@ -1,4 +1,4 @@
-import { createEmptyCard, fsrs, generatorParameters, type FSRSState, type Grade } from "ts-fsrs";
+import { createEmptyCard, fsrs, generatorParameters, type FSRSState, type Grade, type State, type Steps } from "ts-fsrs";
 
 export class TsFsrsCalculator {
     readonly w: number[];
@@ -13,23 +13,32 @@ export class TsFsrsCalculator {
         return (d - 1.0) / 9.0 * 100.0;
     }
 
-    public steps(reviews: number[]): Card[] {
+    public steps(reviews: Grade[]): Card[] {
         const list = [];
         const f = fsrs(generatorParameters({
             w: this.w,
             request_retention: this.request_retention,
+            enable_short_term: true,
+            learning_steps: ['0m'],
+            relearning_steps: ['0m'],
+            enable_fuzz: false,
         }));
 
-        let interval = 0;
+        let card = createEmptyCard(new Date());
         let cumulativeInterval = 0;
-        let memory: FSRSState | null = null;
 
         for (const review of reviews) {
-            memory = f.next_state(memory, interval, review as Grade);
-            const displayDifficulty = this.calcDisplayDifficulty(memory.difficulty);
-            interval = f.next_interval(memory.stability, interval);
+            const result = f.next(card, card.due, review)
+
+            const difficulty = result.card.difficulty;
+            const displayDifficulty = this.calcDisplayDifficulty(difficulty);
+            const interval = result.card.scheduled_days;
+
             cumulativeInterval += interval;
-            list.push(new Card(memory.difficulty, displayDifficulty, memory.stability, interval, cumulativeInterval, review));
+
+            list.push(new Card(difficulty, displayDifficulty, result.card.stability, interval, cumulativeInterval, review, result.card.state));
+
+            card = result.card;
         }
 
         return list;
@@ -43,6 +52,7 @@ export class Card {
         public stability: number,
         public interval: number,
         public cumulativeInterval: number,
-        public grade: number
+        public grade: Grade,
+        public state: State,
     ) { }
 }

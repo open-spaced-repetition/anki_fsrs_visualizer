@@ -3,10 +3,14 @@ import { createEmptyCard, fsrs, generatorParameters, type FSRSState, type Grade,
 export class TsFsrsCalculator {
     readonly w: number[];
     readonly request_retention: number;
+    readonly learning_steps: Steps;
+    readonly relearning_steps: Steps;
 
-    public constructor(w: number[], m: number[]) {
+    public constructor(w: number[], m: number[], learning_steps: Steps, relearning_steps: Steps) {
         this.w = w;
         this.request_retention = m[0];
+        this.learning_steps = learning_steps;
+        this.relearning_steps = relearning_steps;
     }
 
     calcDisplayDifficulty(d: number) {
@@ -19,8 +23,8 @@ export class TsFsrsCalculator {
             w: this.w,
             request_retention: this.request_retention,
             enable_short_term: true,
-            learning_steps: ['0m'],
-            relearning_steps: ['0m'],
+            learning_steps: this.learning_steps,
+            relearning_steps: this.relearning_steps,
             enable_fuzz: false,
         }));
 

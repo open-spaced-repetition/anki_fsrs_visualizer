@@ -45,6 +45,10 @@
             <input id="log-scale" type="checkbox" v-model="useLogScale" />
             <label for="log-scale">Logarithmic</label>
         </div>
+        <div title="Enables 10m learning and relearning steps">
+            <input id="short-term" type="checkbox" v-model="shortTerm" />
+            <label for="short-term">Short term</label>
+        </div>
     </div>
     <div class="slider-container">
         <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]"
@@ -96,6 +100,7 @@ import { createOptions, linearScaleOptions, logarithmicScaleOptions } from './ch
 import { Line } from 'vue-chartjs';
 import Slider from './Slider.vue';
 import { useRouter, useRoute } from 'vue-router';
+import { type Steps } from 'ts-fsrs';
 
 const router = useRouter();
 const route = useRoute();
@@ -140,6 +145,7 @@ function cardDataFormat(card: Card, mode: keyof Card) {
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 const useLogScale = ref(false);
+const shortTerm = ref(false);
 const gradeNames = ['', 'Again', 'Hard', 'Good', 'Easy'];
 const stateNames = ['New', 'Learning', 'Review', 'Relearning'];
 
@@ -226,7 +232,8 @@ function createLabels() {
 }
 
 function createData(): ChartData<'line', MyData[]> {
-    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m);
+    const steps: Steps = shortTerm.value ? ['10m'] : [];
+    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, steps, steps);
 
     // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {

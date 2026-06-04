@@ -6,14 +6,14 @@
                 <button @click="resetReviews">Reset reviews</button>
             </div>
             <div class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</div>
-            <textarea v-model="reviews_text"></textarea>
+            <textarea v-model="reviewsText"></textarea>
         </div>
         <div class="chart-container">
             <Line :data="data" :options="options" />
         </div>
     </div>
     <div class="whole">
-        <input class="whole-input" v-model.lazy="w_text" @change="commit" />
+        <input class="whole-input" v-model.lazy="wText" @change="commit" />
     </div>
     <div class="action-bar">
         <button @click="reset">Reset parameters</button>
@@ -51,9 +51,9 @@
         </div>
     </div>
     <div class="slider-container">
-        <Slider v-for="(slider, index) in additionalSliders" :key="index" :info="slider" v-model="fsrs_params.m[index]"
+        <Slider v-for="(slider, index) in additionalSliders" :key="index" :info="slider" v-model="fsrsParams.m[index]"
             @change="commit" />
-        <Slider v-for="(slider, index) in sliders" :key="index" :info="slider" v-model="fsrs_params.w[index]"
+        <Slider v-for="(slider, index) in sliders" :key="index" :info="slider" v-model="fsrsParams.w[index]"
             @change="commit" />
     </div>
     <table class="table-dataset">
@@ -93,7 +93,7 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, TsFsrsCalculator } from './tsFsrsCalculator';
-import { sliders, additionalSliders, default_w, initial_reviews } from './sliderInfo';
+import { sliders, additionalSliders, default_w as defaultW, initial_reviews as initialReviews } from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -149,7 +149,7 @@ const gradeNames = ['', 'Again', 'Hard', 'Good', 'Easy'];
 const stateNames = ['New', 'Learning', 'Review', 'Relearning'];
 
 function calcTooltip(item: MyData) {
-    const review_text = item.review.join('');
+    const reviewText = item.review.join('');
 
     const name = gradeNames[item.x];
     const stability = item.card.stability.toFixed(2);
@@ -157,7 +157,7 @@ function calcTooltip(item: MyData) {
     const difficulty = item.card.difficulty.toFixed(2);
     const state = stateNames[item.card.state];
 
-    return `${review_text}: ${name}, Stability: ${stability}, D: ${displayDifficulty}% (${difficulty}), State: ${state}`;
+    return `${reviewText}: ${name}, Stability: ${stability}, D: ${displayDifficulty}% (${difficulty}), State: ${state}`;
 }
 
 function calcTitle(items: MyData[]) {
@@ -199,27 +199,27 @@ function convertCardToMyData(card: Card, review: number[]): MyData {
     };
 }
 
-const reviews = ref(initial_reviews);
+const reviews = ref(initialReviews);
 
-const reviews_text = computed({
+const reviewsText = computed({
     get: () => reviews.value.map(a => a.join('')).join('\n'),
     set: (newValue) => reviews.value = newValue.split('\n')
         .map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number)),
 });
 
-const initial_m = [0.9];
+const initialM = [0.9];
 
-const fsrs_params = ref({
-    w: [...default_w],
-    m: [...initial_m],
+const fsrsParams = ref({
+    w: [...defaultW],
+    m: [...initialM],
 });
 
 watch(() => route.query, (query) => {
-    fsrs_params.value.w = parse_parameters(query.w as string || '', default_w);
-    fsrs_params.value.m = parse_parameters(query.m as string || '', initial_m);
+    fsrsParams.value.w = parseParameters(query.w as string || '', defaultW);
+    fsrsParams.value.m = parseParameters(query.m as string || '', initialM);
 }, { immediate: true });
 
-const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrs_params, { clone: true });
+const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrsParams, { clone: true });
 
 function createLabels() {
     const max = Math.max(...reviews.value.map(a => a.length));
@@ -228,7 +228,7 @@ function createLabels() {
 
 const data = computed<ChartData<'line', MyData[]>>(() => {
     const steps: Steps = shortTerm.value ? ['10m'] : [];
-    const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, steps, steps);
+    const calc = new TsFsrsCalculator(fsrsParams.value.w, fsrsParams.value.m, steps, steps);
 
     return {
         labels: createLabels(),
@@ -241,41 +241,41 @@ const data = computed<ChartData<'line', MyData[]>>(() => {
     };
 });
 
-function parse_parameters(value: string, default_value: readonly number[]) {
-    if (!value) return [...default_value];
-    return resize_array(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), default_value.length, 0.0);
+function parseParameters(value: string, defaultValue: readonly number[]) {
+    if (!value) return [...defaultValue];
+    return resizeArray(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), defaultValue.length, 0.0);
 }
 
-function params_to_string(value: number[], fixed: number, sep: string) {
+function paramsToString(value: number[], fixed: number, sep: string) {
     return value.map((f: number) => f.toFixed(fixed)).join(sep);
 }
 
-const w_text = computed({
-    get: () => params_to_string(fsrs_params.value.w, 4, ', '),
-    set: (newValue) => fsrs_params.value.w = parse_parameters(newValue, default_w),
+const wText = computed({
+    get: () => paramsToString(fsrsParams.value.w, 4, ', '),
+    set: (newValue) => fsrsParams.value.w = parseParameters(newValue, defaultW),
 });
 
-watch(fsrs_params, (newValue) => {
+watch(fsrsParams, (newValue) => {
     router.replace({
         query: {
-            w: params_to_string(newValue.w, 4, ','),
-            m: params_to_string(newValue.m, 2, ','),
+            w: paramsToString(newValue.w, 4, ','),
+            m: paramsToString(newValue.m, 2, ','),
         }
     });
 }, { deep: true });
 
-function resize_array<T>(arr: T[], length: number, filler: T): T[] {
+function resizeArray<T>(arr: T[], length: number, filler: T): T[] {
     return arr.concat(new Array(Math.max(length - arr.length, 0)).fill(filler));
 }
 
 function reset() {
-    fsrs_params.value.w = [...default_w];
-    fsrs_params.value.m = [...initial_m];
+    fsrsParams.value.w = [...defaultW];
+    fsrsParams.value.m = [...initialM];
     commit();
 }
 
 function resetReviews() {
-    reviews.value = initial_reviews;
+    reviews.value = initialReviews;
 }
 
 export interface MyData {

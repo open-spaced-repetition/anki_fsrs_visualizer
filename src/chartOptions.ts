@@ -58,9 +58,10 @@ export function createOptions(params: { title_function: (raw: any) => string, to
             zoom: zoomOptions,
             datalabels: {
                 color: '#36A2EB',
-                align: 'left',
+                textStrokeColor: 'white',
+                textStrokeWidth: 2,
+                align: context => context.dataIndex === 0 ? 'right' : 'left',
                 anchor: 'center',
-                display: true,
                 formatter: (obj, _) => obj.label, //TODO: type
             },
             colors: {

@@ -9,7 +9,7 @@
             <textarea v-model="reviews_text"></textarea>
         </div>
         <div class="chart-container">
-            <Line ref="chartRef" :data="data" :options="options" />
+            <Line :data="data" :options="options" />
         </div>
     </div>
     <div class="whole">
@@ -17,8 +17,8 @@
     </div>
     <div class="action-bar">
         <button @click="reset">Reset parameters</button>
-        <button @click="undo" :disabled='!canUndo'>Undo</button>
-        <button @click="redo" :disabled='!canRedo'>Redo</button>
+        <button @click="undo" :disabled="!canUndo">Undo</button>
+        <button @click="redo" :disabled="!canRedo">Redo</button>
         {{ undoStack.length }} / {{ redoStack.length + undoStack.length }}
         <div>
             <input id="mode-interval" type="radio" :value="nameof<Card>('interval')" v-model="mode" />
@@ -51,23 +51,24 @@
         </div>
     </div>
     <div class="slider-container">
-        <Slider v-for="(slider, index) in additionalSliders" :info="slider" v-model="fsrs_params.m[index]"
+        <Slider v-for="(slider, index) in additionalSliders" :key="index" :info="slider" v-model="fsrs_params.m[index]"
             @change="commit" />
-        <Slider v-for="(slider, index) in sliders" :info="slider" v-model="fsrs_params.w[index]" @change="commit" />
+        <Slider v-for="(slider, index) in sliders" :key="index" :info="slider" v-model="fsrs_params.w[index]"
+            @change="commit" />
     </div>
     <table class="table-dataset">
         <thead>
             <tr>
                 <td>Grade</td>
-                <td v-for="label in data.labels">
+                <td v-for="(label, index) in data.labels" :key="index">
                     {{ modeOf(mode) }}-{{ label }}
                 </td>
             </tr>
         </thead>
         <tbody>
-            <tr v-for="dataset in data.datasets">
+            <tr v-for="dataset in data.datasets" :key="dataset.label">
                 <td>{{ dataset.label }}</td>
-                <td v-for="item in dataset.data">
+                <td v-for="(item, index) in dataset.data" :key="index">
                     {{ cardDataFormat(item.card, mode) }}
                 </td>
             </tr>
@@ -119,8 +120,6 @@ ChartJS.register(
     ChartDataLabels
 );
 
-const chartRef = ref<typeof Line | null>(null);
-
 function nameof<T>(name: keyof T) { return name; }
 
 function modeOf(mode: keyof Card) {
@@ -149,46 +148,41 @@ const shortTerm = ref(false);
 const gradeNames = ['', 'Again', 'Hard', 'Good', 'Easy'];
 const stateNames = ['New', 'Learning', 'Review', 'Relearning'];
 
-//can't disable animation using reactive options, so using watch
-watch(animation, a => {
-    if (typeof options.value.animation === 'object') {
-        options.value.animation.duration = a ? 500 : 0;
-    }
-});
+function calcTooltip(item: MyData) {
+    const review_text = item.review.join('');
 
-const options = ref(createOptions({
-    title_function: (items: MyData[]) => {
-        const unique = [...new Set(items.map(a => a.y))];
-        return `${mode.value}: ${unique.join(', ')}`;
-    },
-    tooltip_function: (item: MyData) => {
-        const review_text = item.review.join('');
+    const name = gradeNames[item.x];
+    const stability = item.card.stability.toFixed(2);
+    const displayDifficulty = item.card.displayDifficulty.toFixed(0);
+    const difficulty = item.card.difficulty.toFixed(2);
+    const state = stateNames[item.card.state];
 
-        const name = gradeNames[item.x];
-        const stability = item.card.stability.toFixed(2);
-        const displayDifficulty = item.card.displayDifficulty.toFixed(0);
-        const difficulty = item.card.difficulty.toFixed(2);
-        const state = stateNames[item.card.state];
+    return `${review_text}: ${name}, Stability: ${stability}, D: ${displayDifficulty}% (${difficulty}), State: ${state}`;
+}
 
-        return `${review_text}: ${name}, Stability: ${stability}, D: ${displayDifficulty}% (${difficulty}), State: ${state}`;
-    },
-}));
+function calcTitle(items: MyData[]) {
+    const unique = [...new Set(items.map(a => a.y))];
+    return `${mode.value}: ${unique.join(', ')}`;
+}
 
-watch(useLogScale, (newUseLogScale) => {
-    if (options.value.scales && chartRef.value) {
-        const scaleOptions = newUseLogScale ? logarithmicScaleOptions : linearScaleOptions;
+const options = computed(() => {
+    const baseOptions = createOptions({
+        title_function: calcTitle,
+        tooltip_function: calcTooltip,
+    });
 
-        //need this for chart.js to see updates on scales
-        options.value = {
-            ...options.value,
-            scales: {
-                ...options.value.scales,
-                y: scaleOptions,
-            }
-        };
+    const scaleOptions = useLogScale.value ? logarithmicScaleOptions : linearScaleOptions;
 
-        chartRef.value.chart.update();
-    }
+    return {
+        ...baseOptions,
+        animation: {
+            duration: animation.value ? 500 : 0
+        },
+        scales: {
+            ...baseOptions.scales,
+            y: scaleOptions,
+        }
+    };
 });
 
 function getDataLabel(card: Card) {
@@ -209,7 +203,8 @@ const reviews = ref(initial_reviews);
 
 const reviews_text = computed({
     get: () => reviews.value.map(a => a.join('')).join('\n'),
-    set: (newValue) => reviews.value = newValue.split('\n').map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number)),
+    set: (newValue) => reviews.value = newValue.split('\n')
+        .map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number)),
 });
 
 const initial_m = [0.9];
@@ -228,28 +223,23 @@ const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManual
 
 function createLabels() {
     const max = Math.max(...reviews.value.map(a => a.length));
-    return Array.from({ length: max }, (_, review) => `${review}`);
+    return Array.from({ length: max }, (_, index) => `${index}`);
 }
 
-function createData(): ChartData<'line', MyData[]> {
+const data = computed<ChartData<'line', MyData[]>>(() => {
     const steps: Steps = shortTerm.value ? ['10m'] : [];
     const calc = new TsFsrsCalculator(fsrs_params.value.w, fsrs_params.value.m, steps, steps);
 
-    // could not use dataset's yAxisKey here because chart component is not watching it and doesn't update automatically
     return {
         labels: createLabels(),
-        datasets: reviews.value.map(review => {
-            return {
-                label: review.join(''),
-                pointRadius: 4,
-                pointHoverRadius: 5,
-                data: calc.steps(review).map(a => convertCardToMyData(a, review)),
-            } as ChartDataset<'line', MyData[]>;
-        }),
+        datasets: reviews.value.map(review => ({
+            label: review.join(''),
+            pointRadius: 4,
+            pointHoverRadius: 5,
+            data: calc.steps(review).map(a => convertCardToMyData(a, review)),
+        } as ChartDataset<'line', MyData[]>)),
     };
-}
-
-const data = computed(createData);
+});
 
 function parse_parameters(value: string, default_value: readonly number[]) {
     if (!value) return [...default_value];
@@ -289,10 +279,10 @@ function resetReviews() {
 }
 
 export interface MyData {
-    x: number,
-    y: number,
-    label: string,
-    review: number[],
-    card: Card,
+    x: number;
+    y: number;
+    label: string;
+    review: number[];
+    card: Card;
 }
 </script>

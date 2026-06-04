@@ -36,7 +36,7 @@
         <div>
             <input id="mode-cumulativeInterval" type="radio" :value="nameof<Card>('cumulativeInterval')"
                 v-model="mode" />
-            <label for="mode-cumulativeInterval">CumulativeInterval</label>
+            <label for="mode-cumulativeInterval">Cumulative Interval</label>
         </div>
         <div>
             <input id="animation" type="checkbox" v-model="animation" />
@@ -151,13 +151,14 @@ const stateNames = ['New', 'Learning', 'Review', 'Relearning'];
 function calcTooltip(item: MyData) {
     const reviewText = item.review.join('');
 
-    const name = gradeNames[item.x];
+    const gradeName = gradeNames[item.x];
+    const interval = item.card.interval.toFixed(0);
     const stability = item.card.stability.toFixed(2);
     const displayDifficulty = item.card.displayDifficulty.toFixed(0);
     const difficulty = item.card.difficulty.toFixed(2);
     const state = stateNames[item.card.state];
 
-    return `${reviewText}: ${name}, Stability: ${stability}, D: ${displayDifficulty}% (${difficulty}), State: ${state}`;
+    return `${reviewText}: ${gradeName}, Interval: ${interval} Stability: ${stability}, Difficulty: ${displayDifficulty}% (${difficulty}), State: ${state}`;
 }
 
 function calcTitle(items: MyData[]) {
@@ -186,7 +187,17 @@ const options = computed(() => {
 });
 
 function getDataLabel(card: Card) {
-    return `${gradeNames[card.grade]} (Difficulty: ${card.displayDifficulty.toFixed(0)}%)`;
+    let details = '';
+
+    if (mode.value === 'stability') {
+        details = `${card.stability.toFixed(2)}, ${card.displayDifficulty.toFixed(0)}%`;
+    } else if (mode.value === 'displayDifficulty') {
+        details = `${card.displayDifficulty.toFixed(2)}%, ${card.difficulty.toFixed(2)}`;
+    } else {
+        details = `${card[mode.value].toFixed(0)}, ${card.displayDifficulty.toFixed(0)}%`;
+    }
+
+    return `${gradeNames[card.grade]} (${details})`;
 }
 
 function convertCardToMyData(card: Card, review: number[]): MyData {

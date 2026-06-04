@@ -1,11 +1,12 @@
 <template>
     <div class="container-top">
         <div class="reviews">
-            <div>
-                <div><b>FSRS-6</b></div>
+            <div class="reviews-header">
+                <b>FSRS-6</b>
+                <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" class="github-link">Github</a>
                 <button @click="resetReviews">Reset reviews</button>
+                <span class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</span>
             </div>
-            <div class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</div>
             <textarea v-model="reviewsText"></textarea>
         </div>
         <div class="chart-container">
@@ -74,7 +75,6 @@
             </tr>
         </tbody>
     </table>
-    <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" class="github-link">Github</a>
 </template>
 <style src="./assets/app.css" scoped></style>
 <script lang="ts" setup>

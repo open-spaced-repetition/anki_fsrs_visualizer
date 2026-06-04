@@ -5,6 +5,14 @@
     flex-wrap: wrap;
 }
 
+.slider:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.slider:hover {
+    background-color: rgba(0, 0, 0, 0.09);
+}
+
 .slider-name {
     white-space: nowrap;
     width: 16em;
@@ -19,6 +27,7 @@
     min-width: 10em;
     display: flex;
     column-gap: 5px;
+    align-items: center;
 }
 
 .minmax {
@@ -31,4 +40,5 @@
 
 .slider-range-input {
     width: 100%;
+    background: transparent;
 }

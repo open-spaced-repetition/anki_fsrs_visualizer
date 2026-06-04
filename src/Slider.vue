@@ -1,10 +1,8 @@
 <template>
     <div class="slider">
         <div class="slider-name">{{ props.info.name }}</div>
-        <div>
-            <input class="slider-number" type="number" :step="props.info.step" v-model.number="model"
-                :min="props.info.min" :max="props.info.max" @change="onChange" />
-        </div>
+        <input class="slider-number" type="number" :step="props.info.step" v-model.number="model" :min="props.info.min"
+            :max="props.info.max" @change="onChange" />
         <div class="slider-range-container">
             <div class="minmax minmax-rt">
                 {{ props.info.min }}

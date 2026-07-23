@@ -2,7 +2,10 @@
     <div class="container-top">
         <div class="reviews">
             <div class="reviews-header">
-                <b>FSRS-6</b>
+                <select v-model="fsrsVersion" aria-label="FSRS version">
+                    <option value="6">FSRS-6</option>
+                    <option value="5">FSRS-5</option>
+                </select>
                 <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" class="github-link">Github</a>
                 <button @click="resetReviews">Reset reviews</button>
                 <span class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</span>
@@ -54,8 +57,8 @@
     <div class="slider-container">
         <Slider v-for="(slider, index) in additionalSliders" :key="index" :info="slider" v-model="fsrsParams.m[index]"
             @change="commit" />
-        <Slider v-for="(slider, index) in sliders" :key="index" :info="slider" v-model="fsrsParams.w[index]"
-            @change="commit" />
+        <Slider v-for="(slider, index) in displaySliders" :key="index" :info="slider" :disabled="isFsrs6OnlySlider(index)"
+            v-model="fsrsParams.w[index]" @change="commit" />
     </div>
     <table class="table-dataset">
         <thead>
@@ -93,7 +96,10 @@ import {
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
 import { Card, TsFsrsCalculator } from './tsFsrsCalculator';
-import { sliders, additionalSliders, default_w as defaultW, initial_reviews as initialReviews } from './sliderInfo';
+import {
+    sliders, additionalSliders, default_w as defaultW, initial_reviews as initialReviews,
+    fsrs6OnlyIndices, defaultWeightsFor, type FsrsVersion,
+} from './sliderInfo';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -220,10 +226,20 @@ const reviewsText = computed({
 
 const initialM = [0.9];
 
+const fsrsVersion = ref<FsrsVersion>('6');
+
 const fsrsParams = ref({
     w: [...defaultW],
     m: [...initialM],
 });
+
+function isFsrs6OnlySlider(index: number) {
+    return fsrsVersion.value === '5' && fsrs6OnlyIndices.includes(index);
+}
+
+const displaySliders = computed(() => sliders.map((slider, index) =>
+    isFsrs6OnlySlider(index) ? { ...slider, name: `${slider.name} (FSRS-6 only)` } : slider
+));
 
 watch(() => route.query, (query) => {
     fsrsParams.value.w = parseParameters(query.w as string || '', defaultW);
@@ -232,6 +248,22 @@ watch(() => route.query, (query) => {
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrsParams, { clone: true });
 
+let savedFsrs6W: number[] | null = null;
+
+watch(fsrsVersion, (newVersion, oldVersion) => {
+    if (newVersion === oldVersion) return;
+
+    if (newVersion === '5') {
+        savedFsrs6W = [...fsrsParams.value.w];
+        fsrsParams.value.w = defaultWeightsFor('5');
+    } else {
+        fsrsParams.value.w = savedFsrs6W ? [...savedFsrs6W] : defaultWeightsFor('6');
+        savedFsrs6W = null;
+    }
+
+    commit();
+});
+
 function createLabels() {
     const max = Math.max(...reviews.value.map(a => a.length));
     return Array.from({ length: max }, (_, index) => `${index}`);
@@ -239,7 +271,10 @@ function createLabels() {
 
 const data = computed<ChartData<'line', MyData[]>>(() => {
     const steps: Steps = shortTerm.value ? ['10m'] : [];
-    const calc = new TsFsrsCalculator(fsrsParams.value.w, fsrsParams.value.m, steps, steps);
+    // FSRS-5 has no w19/w20; slicing lets ts-fsrs's own migrateParameters fill them
+    // in exactly as it does for a genuine 19-length parameter set.
+    const w = fsrsVersion.value === '5' ? fsrsParams.value.w.slice(0, 19) : fsrsParams.value.w;
+    const calc = new TsFsrsCalculator(w, fsrsParams.value.m, steps, steps);
 
     return {
         labels: createLabels(),
@@ -280,7 +315,7 @@ function resizeArray<T>(arr: T[], length: number, filler: T): T[] {
 }
 
 function reset() {
-    fsrsParams.value.w = [...defaultW];
+    fsrsParams.value.w = defaultWeightsFor(fsrsVersion.value);
     fsrsParams.value.m = [...initialM];
     commit();
 }

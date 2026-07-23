@@ -42,3 +42,7 @@
     width: 100%;
     background: transparent;
 }
+
+.slider-disabled {
+    opacity: 0.4;
+}

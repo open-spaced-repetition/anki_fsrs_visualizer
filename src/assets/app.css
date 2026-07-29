@@ -36,9 +36,25 @@ textarea {
     & .reviews-header {
         display: flex;
         flex-wrap: wrap;
-        align-items: baseline;
-        gap: 2px;
-        margin-bottom: 2px;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 4px;
+
+        & .algo-select-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        & .algo-select {
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            font-size: 13px;
+        }
     }
 
     & .small-hint {

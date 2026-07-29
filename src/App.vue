@@ -2,7 +2,13 @@
     <div class="container-top">
         <div class="reviews">
             <div class="reviews-header">
-                <b>FSRS-6</b>
+                <div class="algo-select-container">
+                    <select id="algorithm-select" :value="algoId" @change="onAlgorithmChange" class="algo-select">
+                        <option v-for="algo in algorithms" :key="algo.id" :value="algo.id">
+                            {{ algo.name }}
+                        </option>
+                    </select>
+                </div>
                 <a href="https://github.com/open-spaced-repetition/anki_fsrs_visualizer/" class="github-link">Github</a>
                 <button @click="resetReviews">Reset reviews</button>
                 <span class="small-hint">1=Again, 2=Hard, 3=Good, 4=Easy</span>
@@ -46,16 +52,12 @@
             <input id="log-scale" type="checkbox" v-model="useLogScale" />
             <label for="log-scale">Logarithmic</label>
         </div>
-        <div title="Enables 10m learning and relearning steps">
-            <input id="short-term" type="checkbox" v-model="shortTerm" />
-            <label for="short-term">Short term</label>
-        </div>
     </div>
     <div class="slider-container">
         <Slider v-for="(slider, index) in additionalSliders" :key="index" :info="slider" v-model="fsrsParams.m[index]"
             @change="commit" />
-        <Slider v-for="(slider, index) in sliders" :key="index" :info="slider" v-model="fsrsParams.w[index]"
-            @change="commit" />
+        <Slider v-for="(slider, index) in sliders.slice(0, activeWeightsCount)" :key="index" :info="slider"
+            v-model="fsrsParams.w[index]" @change="commit" />
     </div>
     <table class="table-dataset">
         <thead>
@@ -92,16 +94,33 @@ import {
     Colors,
 } from 'chart.js';
 import type { ChartData, ChartDataset } from 'chart.js';
-import { Card, TsFsrsCalculator } from './tsFsrsCalculator';
-import { sliders, additionalSliders, default_w as defaultW, initial_reviews as initialReviews } from './sliderInfo';
+import type { Card } from './types';
+import {
+    additionalSliders,
+    sliders,
+    algorithms,
+    defaultAlgorithm,
+    detectAlgorithm,
+    initialReviews,
+} from './tsFsrsCalculator';
+import {
+    nameof,
+    modeOf,
+    cardDataFormat,
+    calcTooltip,
+    calcTitle,
+    convertCardToMyData,
+    createLabels,
+    type MyData,
+} from './chartHelpers';
+import { parseParameters, parseRawParameters, paramsToString, parseReviewsText, formatReviewsText } from './utils';
 import { useManualRefHistory } from '@vueuse/core';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { createOptions, linearScaleOptions, logarithmicScaleOptions } from './chartOptions.js';
+import { createOptions, linearScaleOptions, logarithmicScaleOptions } from './chartOptions';
 import { Line } from 'vue-chartjs';
 import Slider from './Slider.vue';
 import { useRouter, useRoute } from 'vue-router';
-import { type Steps } from 'ts-fsrs';
 
 const router = useRouter();
 const route = useRoute();
@@ -120,57 +139,15 @@ ChartJS.register(
     ChartDataLabels
 );
 
-function nameof<T>(name: keyof T) { return name; }
-
-function modeOf(mode: keyof Card) {
-    const modeMap: { [key in keyof Card]?: string } = {
-        interval: 'Ivl',
-        stability: 'S',
-        displayDifficulty: 'D',
-        cumulativeInterval: 'CIvl'
-    };
-
-    return modeMap[mode] || '';
-}
-
-function cardDataFormat(card: Card, modeKey: keyof Card): string {
-    if (modeKey === 'interval' || modeKey === 'cumulativeInterval') {
-        return card[modeKey].toFixed(0);
-    }
-    return card[modeKey].toFixed(2);
-}
-
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 const useLogScale = ref(false);
-const shortTerm = ref(false);
-const gradeNames: readonly string[] = ['', 'Again', 'Hard', 'Good', 'Easy'];
-const stateNames: readonly string[] = ['New', 'Learning', 'Review', 'Relearning'];
-
-function calcTooltip(item: MyData): string {
-    const reviewText = item.review.join('');
-
-    const gradeName = gradeNames[item.x];
-    const interval = item.card.interval.toFixed(0);
-    const stability = item.card.stability.toFixed(2);
-    const displayDifficulty = item.card.displayDifficulty.toFixed(0);
-    const difficulty = item.card.difficulty.toFixed(2);
-    const state = stateNames[item.card.state];
-
-    return `${reviewText}: ${gradeName}, Interval: ${interval} Stability: ${stability}, Difficulty: ${displayDifficulty}% (${difficulty}), State: ${state}`;
-}
-
-function calcTitle(items: MyData[]): string {
-    const unique = [...new Set(items.map(a => a.y))];
-    return `${mode.value}: ${unique.join(', ')}`;
-}
 
 const options = computed(() => {
     const baseOptions = createOptions({
-        title_function: calcTitle,
+        title_function: (items) => calcTitle(items, mode.value),
         tooltip_function: calcTooltip,
     });
-
     const scaleOptions = useLogScale.value ? logarithmicScaleOptions : linearScaleOptions;
 
     return {
@@ -185,119 +162,98 @@ const options = computed(() => {
     };
 });
 
-function getDataLabel(card: Card): string {
-    let details = '';
-
-    if (mode.value === 'stability') {
-        details = `${card.stability.toFixed(2)}, ${card.displayDifficulty.toFixed(0)}%`;
-    } else if (mode.value === 'displayDifficulty') {
-        details = `${card.displayDifficulty.toFixed(2)}%, ${card.difficulty.toFixed(2)}`;
-    } else {
-        details = `${card[mode.value].toFixed(0)}, ${card.displayDifficulty.toFixed(0)}%`;
-    }
-
-    return `${gradeNames[card.grade]} (${details})`;
-}
-
-function convertCardToMyData(card: Card, review: number[]): MyData {
-    return {
-        x: card.grade,
-        y: card[mode.value] as number,
-        card: card,
-        review: review,
-        label: getDataLabel(card),
-    };
-}
-
 const reviews = ref(initialReviews);
 
 const reviewsText = computed({
-    get: () => reviews.value.map(a => a.join('')).join('\n'),
+    get: () => formatReviewsText(reviews.value),
     set: (newValue) => {
-        reviews.value = newValue.split('\n')
-            .map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number));
+        reviews.value = parseReviewsText(newValue);
     },
 });
 
 const initialM: readonly number[] = [0.9];
 
+const algoId = ref(defaultAlgorithm.id);
+
 const fsrsParams = ref({
-    w: [...defaultW],
+    w: [...defaultAlgorithm.defaultWeights],
     m: [...initialM],
 });
 
+const currentAlgorithm = computed(() => algorithms[algoId.value] || defaultAlgorithm);
+const activeWeightsCount = computed(() => currentAlgorithm.value.defaultWeights.length);
+
 watch(() => route.query, (query) => {
-    fsrsParams.value.w = parseParameters(query.w as string || '', defaultW);
-    fsrsParams.value.m = parseParameters(query.m as string || '', initialM);
+    const rawW = query.w ? parseRawParameters(query.w as string) : [];
+    const queryAlgo = (query.a ?? query.algo) as string | undefined;
+    const algo = detectAlgorithm(
+        typeof queryAlgo === 'string' ? queryAlgo : undefined,
+        rawW.length > 0 ? rawW.length : undefined
+    );
+
+    const w = query.w ? parseParameters(query.w as string, algo.defaultWeights) : [...algo.defaultWeights];
+    const m = query.m ? parseParameters(query.m as string, initialM) : [...initialM];
+
+    algoId.value = algo.id;
+    fsrsParams.value.w = w;
+    fsrsParams.value.m = m;
 }, { immediate: true });
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrsParams, { clone: true });
 
-function createLabels(): string[] {
-    const lengths = reviews.value.map(a => a.length);
-    const max = lengths.length > 0 ? Math.max(...lengths) : 0;
-    return Array.from({ length: max }, (_, index) => `${index}`);
+function onAlgorithmChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const newAlgoId = target.value;
+    if (newAlgoId === algoId.value) return;
+
+    const nextAlgo = algorithms[newAlgoId] || defaultAlgorithm;
+
+    algoId.value = nextAlgo.id;
+    fsrsParams.value.w = [...nextAlgo.defaultWeights];
+    commit();
 }
 
 const data = computed<ChartData<'line', MyData[]>>(() => {
-    const steps: Steps = shortTerm.value ? ['10m'] : [];
-    const calc = new TsFsrsCalculator(fsrsParams.value.w, fsrsParams.value.m, steps, steps);
+    const params = {
+        weights: fsrsParams.value.w,
+        requestRetention: fsrsParams.value.m[0] ?? 0.9,
+    };
 
     return {
-        labels: createLabels(),
+        labels: createLabels(reviews.value),
         datasets: reviews.value.map(review => ({
             label: review.join(''),
             pointRadius: 4,
             pointHoverRadius: 5,
-            data: calc.steps(review).map(a => convertCardToMyData(a, review)),
+            data: currentAlgorithm.value.steps(params, review).map(a => convertCardToMyData(a, review, mode.value)),
         } as ChartDataset<'line', MyData[]>)),
     };
 });
 
-function parseParameters(value: string, defaultValue: readonly number[]) {
-    if (!value) return [...defaultValue];
-    return resizeArray(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), defaultValue.length, 0.0);
-}
-
-function paramsToString(value: number[], fixed: number, sep: string): string {
-    return value.map((f: number) => f.toFixed(fixed)).join(sep);
-}
-
 const wText = computed({
     get: () => paramsToString(fsrsParams.value.w, 4, ', '),
     set: (newValue) => {
-        fsrsParams.value.w = parseParameters(newValue, defaultW);
+        fsrsParams.value.w = parseParameters(newValue, currentAlgorithm.value.defaultWeights);
     },
 });
 
-watch(fsrsParams, (newValue) => {
+watch([algoId, fsrsParams], ([newAlgoId, newState]) => {
     router.replace({
         query: {
-            w: paramsToString(newValue.w, 4, ','),
-            m: paramsToString(newValue.m, 2, ','),
+            a: newAlgoId,
+            w: paramsToString(newState.w, 4, ','),
+            m: paramsToString(newState.m, 2, ','),
         }
     });
 }, { deep: true });
 
-function resizeArray<T>(arr: T[], length: number, filler: T): T[] {
-    return arr.concat(new Array(Math.max(length - arr.length, 0)).fill(filler));
-}
-
 function reset(): void {
-    fsrsParams.value.w = [...defaultW];
+    fsrsParams.value.w = [...currentAlgorithm.value.defaultWeights];
     fsrsParams.value.m = [...initialM];
     commit();
 }
 
 function resetReviews(): void {
     reviews.value = initialReviews;
-}
-
-export interface MyData {
-    x: number;
-    y: number;
-    label: string;
-    review: number[];
-    card: Card;
 }
 </script>

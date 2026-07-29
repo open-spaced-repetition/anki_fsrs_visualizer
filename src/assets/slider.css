@@ -3,12 +3,22 @@
     align-items: center;
     column-gap: 3px;
     flex-wrap: wrap;
+    transition: opacity 0.2s ease, filter 0.2s ease, background-color 0.2s ease;
 
-    &:nth-child(odd) {
+    &.is-disabled {
+        opacity: 0.45;
+        filter: grayscale(60%);
+
+        & input {
+            cursor: not-allowed;
+        }
+    }
+
+    &:nth-child(odd):not(.is-disabled) {
         background-color: rgba(0, 0, 0, 0.05);
     }
 
-    &:hover {
+    &:hover:not(.is-disabled) {
         background-color: rgba(0, 0, 0, 0.09);
     }
 
@@ -30,6 +40,8 @@
 
         & .minmax {
             width: 2.0em;
+            font-size: 0.85em;
+            color: #888;
 
             &.minmax-rt {
                 text-align: right;

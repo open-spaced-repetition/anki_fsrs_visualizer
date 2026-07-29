@@ -44,7 +44,7 @@ const zoomOptions: ZoomPluginOptions = {
     }
 };
 
-export function createOptions(params: { title_function: (raw: any) => string, tooltip_function: (raw: any) => string; }): ChartOptions<'line'> {
+export function createOptions(params: { title_function: (raw: any[]) => string, tooltip_function: (raw: any) => string; }): ChartOptions<'line'> {
     return {
         responsive: true,
         maintainAspectRatio: false,
@@ -63,7 +63,7 @@ export function createOptions(params: { title_function: (raw: any) => string, to
                 textStrokeWidth: 2,
                 align: context => context.dataIndex === 0 ? 'right' : 'left',
                 anchor: 'center',
-                formatter: (obj, _) => obj.label, //TODO: type
+                formatter: (obj: { label: string; }) => obj.label,
             },
             colors: {
                 forceOverride: true,

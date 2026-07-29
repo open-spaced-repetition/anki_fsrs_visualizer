@@ -1,4 +1,4 @@
-import { createEmptyCard, fsrs, generatorParameters, type FSRSState, type Grade, type State, type Steps } from "ts-fsrs";
+import { createEmptyCard, fsrs, generatorParameters, type Grade, type State, type Steps } from "ts-fsrs";
 
 export class TsFsrsCalculator {
     readonly w: number[];
@@ -13,12 +13,12 @@ export class TsFsrsCalculator {
         this.relearning_steps = relearning_steps;
     }
 
-    calcDisplayDifficulty(d: number) {
-        return (d - 1.0) / 9.0 * 100.0;
+    public calcDisplayDifficulty(d: number): number {
+        return ((d - 1.0) / 9.0) * 100.0;
     }
 
     public steps(reviews: Grade[]): Card[] {
-        const list = [];
+        const list: Card[] = [];
         const f = fsrs(generatorParameters({
             w: this.w,
             request_retention: this.request_retention,
@@ -32,7 +32,7 @@ export class TsFsrsCalculator {
         let cumulativeInterval = 0;
 
         for (const review of reviews) {
-            const result = f.next(card, card.due, review)
+            const result = f.next(card, card.due, review);
 
             const difficulty = result.card.difficulty;
             const displayDifficulty = this.calcDisplayDifficulty(difficulty);

@@ -133,22 +133,21 @@ function modeOf(mode: keyof Card) {
     return modeMap[mode] || '';
 }
 
-function cardDataFormat(card: Card, mode: keyof Card) {
-    if (mode === 'interval' || mode === 'cumulativeInterval') {
-        return card[mode].toFixed(0);
-    } else {
-        return card[mode].toFixed(2);
+function cardDataFormat(card: Card, modeKey: keyof Card): string {
+    if (modeKey === 'interval' || modeKey === 'cumulativeInterval') {
+        return card[modeKey].toFixed(0);
     }
+    return card[modeKey].toFixed(2);
 }
 
 const mode = ref<keyof Card>("interval");
 const animation = ref(true);
 const useLogScale = ref(false);
 const shortTerm = ref(false);
-const gradeNames = ['', 'Again', 'Hard', 'Good', 'Easy'];
-const stateNames = ['New', 'Learning', 'Review', 'Relearning'];
+const gradeNames: readonly string[] = ['', 'Again', 'Hard', 'Good', 'Easy'];
+const stateNames: readonly string[] = ['New', 'Learning', 'Review', 'Relearning'];
 
-function calcTooltip(item: MyData) {
+function calcTooltip(item: MyData): string {
     const reviewText = item.review.join('');
 
     const gradeName = gradeNames[item.x];
@@ -161,7 +160,7 @@ function calcTooltip(item: MyData) {
     return `${reviewText}: ${gradeName}, Interval: ${interval} Stability: ${stability}, Difficulty: ${displayDifficulty}% (${difficulty}), State: ${state}`;
 }
 
-function calcTitle(items: MyData[]) {
+function calcTitle(items: MyData[]): string {
     const unique = [...new Set(items.map(a => a.y))];
     return `${mode.value}: ${unique.join(', ')}`;
 }
@@ -186,7 +185,7 @@ const options = computed(() => {
     };
 });
 
-function getDataLabel(card: Card) {
+function getDataLabel(card: Card): string {
     let details = '';
 
     if (mode.value === 'stability') {
@@ -214,11 +213,13 @@ const reviews = ref(initialReviews);
 
 const reviewsText = computed({
     get: () => reviews.value.map(a => a.join('')).join('\n'),
-    set: (newValue) => reviews.value = newValue.split('\n')
-        .map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number)),
+    set: (newValue) => {
+        reviews.value = newValue.split('\n')
+            .map(a => a.split('').filter(b => ['1', '2', '3', '4'].includes(b)).map(Number));
+    },
 });
 
-const initialM = [0.9];
+const initialM: readonly number[] = [0.9];
 
 const fsrsParams = ref({
     w: [...defaultW],
@@ -232,8 +233,9 @@ watch(() => route.query, (query) => {
 
 const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrsParams, { clone: true });
 
-function createLabels() {
-    const max = Math.max(...reviews.value.map(a => a.length));
+function createLabels(): string[] {
+    const lengths = reviews.value.map(a => a.length);
+    const max = lengths.length > 0 ? Math.max(...lengths) : 0;
     return Array.from({ length: max }, (_, index) => `${index}`);
 }
 
@@ -257,13 +259,15 @@ function parseParameters(value: string, defaultValue: readonly number[]) {
     return resizeArray(value.replaceAll(', ', ',').split(',').map((a: string) => parseFloat(a) || 0), defaultValue.length, 0.0);
 }
 
-function paramsToString(value: number[], fixed: number, sep: string) {
+function paramsToString(value: number[], fixed: number, sep: string): string {
     return value.map((f: number) => f.toFixed(fixed)).join(sep);
 }
 
 const wText = computed({
     get: () => paramsToString(fsrsParams.value.w, 4, ', '),
-    set: (newValue) => fsrsParams.value.w = parseParameters(newValue, defaultW),
+    set: (newValue) => {
+        fsrsParams.value.w = parseParameters(newValue, defaultW);
+    },
 });
 
 watch(fsrsParams, (newValue) => {
@@ -279,13 +283,13 @@ function resizeArray<T>(arr: T[], length: number, filler: T): T[] {
     return arr.concat(new Array(Math.max(length - arr.length, 0)).fill(filler));
 }
 
-function reset() {
+function reset(): void {
     fsrsParams.value.w = [...defaultW];
     fsrsParams.value.m = [...initialM];
     commit();
 }
 
-function resetReviews() {
+function resetReviews(): void {
     reviews.value = initialReviews;
 }
 

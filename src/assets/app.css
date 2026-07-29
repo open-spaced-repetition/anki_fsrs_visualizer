@@ -7,18 +7,11 @@ textarea {
     display: flex;
     height: 50vh;
     gap: 3px;
-}
 
-.reviews-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px;
-    margin-bottom: 2px;
-}
-
-.small-hint {
-    font-size: 70%;
+    @media screen and (max-width: 600px) {
+        flex-direction: column;
+        height: auto;
+    }
 }
 
 .reviews {
@@ -27,43 +20,72 @@ textarea {
     flex-direction: column;
     width: 168px;
     flex-shrink: 0;
-}
 
-.whole {
-    width: 100%;
-    padding: 1px 0px;
-}
+    @media screen and (max-width: 600px) {
+        height: auto;
+        width: 100%;
+    }
 
-.whole input {
-    width: 100%;
-}
+    & textarea {
+        @media screen and (max-width: 600px) {
+            height: 50px;
+            flex: none;
+        }
+    }
 
-.table-dataset {
-    border-collapse: collapse;
-    margin-top: 4px;
-}
+    & .reviews-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 2px;
+        margin-bottom: 2px;
+    }
 
-.table-dataset tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-.table-dataset td {
-    border: 1px solid #ddd;
-    text-align: right;
-    padding: 4px;
+    & .small-hint {
+        font-size: 70%;
+    }
 }
 
 .chart-container {
     position: relative;
     flex: 1;
     min-width: 0;
+
+    @media screen and (max-width: 600px) {
+        height: 400px;
+        flex: none;
+    }
 }
 
-.whole-input {
-    height: 100%;
+.whole {
     width: 100%;
-    box-sizing: border-box;
-    resize: none;
+    padding: 1px 0px;
+
+    & input {
+        width: 100%;
+    }
+
+    & .whole-input {
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        resize: none;
+    }
+}
+
+.table-dataset {
+    border-collapse: collapse;
+    margin-top: 4px;
+
+    & tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    & td {
+        border: 1px solid #ddd;
+        text-align: right;
+        padding: 4px;
+    }
 }
 
 .action-bar {
@@ -80,26 +102,4 @@ textarea {
 
 .github-link {
     font-size: 75%;
-}
-
-@media screen and (max-width: 600px) {
-    .container-top {
-        flex-direction: column;
-        height: auto;
-    }
-
-    .reviews {
-        height: auto;
-        width: 100%;
-    }
-
-    .reviews textarea {
-        height: 50px;
-        flex: none;
-    }
-
-    .chart-container {
-        height: 400px;
-        flex: none;
-    }
 }

@@ -77,15 +77,17 @@ textarea {
     width: 100%;
     padding: 1px 0px;
 
-    & input {
-        width: 100%;
-    }
-
     & .whole-input {
-        height: 100%;
         width: 100%;
+        height: 100%;
         box-sizing: border-box;
-        resize: none;
+        border-width: 1px;
+        border-style: solid;
+
+        &.is-default {
+            background-color: #F0FFF0;
+            border-color: #00D000;
+        }
     }
 }
 

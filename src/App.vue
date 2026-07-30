@@ -20,7 +20,7 @@
         </div>
     </div>
     <div class="whole">
-        <input class="whole-input" v-model.lazy="wText" @change="commit" />
+        <input class="whole-input" :class="{ 'is-default': isDefaultParameters }" v-model.lazy="wText" @change="commit" />
     </div>
     <div class="action-bar">
         <button @click="reset">Reset parameters</button>
@@ -237,12 +237,20 @@ const wText = computed({
     },
 });
 
+const isDefaultParameters = computed(() => {
+    return paramsToString(fsrsParams.value.w, 4, ',') === paramsToString(currentAlgorithm.value.defaultWeights, 4, ',');
+});
+
+const isDefaultM = computed(() => {
+    return paramsToString(fsrsParams.value.m, 2, ',') === paramsToString(initialM, 2, ',');
+});
+
 watch([algoId, fsrsParams], ([newAlgoId, newState]) => {
     router.replace({
         query: {
-            a: newAlgoId,
-            w: paramsToString(newState.w, 4, ','),
-            m: paramsToString(newState.m, 2, ','),
+            a: newAlgoId !== defaultAlgorithm.id ? newAlgoId : undefined,
+            w: isDefaultParameters.value ? undefined : paramsToString(newState.w, 4, ','),
+            m: isDefaultM.value ? undefined : paramsToString(newState.m, 2, ','),
         }
     });
 }, { deep: true });

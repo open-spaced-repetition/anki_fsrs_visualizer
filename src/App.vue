@@ -20,8 +20,9 @@
         </div>
     </div>
     <div class="whole">
-        <input class="whole-input" :class="{ 'is-default': isDefaultParameters }" v-model.lazy="wText" @change="commit" />
+        <input class="whole-input" :class="{ 'is-default': isDefaultParameters }" v-model.lazy="wText" @change="commitParameters" />
     </div>
+    <p v-if="calculation.error" role="alert">Unable to calculate: {{ calculation.error }}</p>
     <div class="action-bar">
         <button @click="reset">Reset parameters</button>
         <button @click="undo" :disabled="!canUndo">Undo</button>
@@ -33,7 +34,11 @@
         </div>
         <div>
             <input id="mode-stability" type="radio" :value="nameof<Card>('stability')" v-model="mode" />
-            <label for="mode-stability">Stability</label>
+            <label for="mode-stability">{{ algoId === 'fsrs-7' ? 'Slow stability (SS)' : 'Stability' }}</label>
+        </div>
+        <div v-if="algoId === 'fsrs-7'">
+            <input id="mode-stabilityFast" type="radio" :value="nameof<Card>('stabilityFast')" v-model="mode" />
+            <label for="mode-stabilityFast">Fast stability (SF)</label>
         </div>
         <div>
             <input id="mode-displayDifficulty" type="radio" :value="nameof<Card>('displayDifficulty')" v-model="mode" />
@@ -56,15 +61,15 @@
     <div class="slider-container">
         <Slider v-for="(slider, index) in additionalSliders" :key="index" :info="slider" v-model="fsrsParams.m[index]"
             @change="commit" />
-        <Slider v-for="(slider, index) in sliders.slice(0, activeWeightsCount)" :key="index" :info="slider"
-            v-model="fsrsParams.w[index]" @change="commit" />
+        <Slider v-for="(slider, index) in currentAlgorithm.sliders" :key="`${algoId}-${index}`" :info="slider"
+            v-model="fsrsParams.w[index]" @change="commitParameters" />
     </div>
     <table class="table-dataset">
         <thead>
             <tr>
                 <td>Grade</td>
                 <td v-for="(label, index) in data.labels" :key="index">
-                    {{ modeOf(mode) }}-{{ label }}
+                    {{ modeOf(mode, algoId === 'fsrs-7') }}-{{ label }}
                 </td>
             </tr>
         </thead>
@@ -97,11 +102,11 @@ import type { ChartData, ChartDataset } from 'chart.js';
 import type { Card } from './types';
 import {
     additionalSliders,
-    sliders,
     algorithms,
     defaultAlgorithm,
     detectAlgorithm,
     initialReviews,
+    createSteps,
 } from './tsFsrsCalculator';
 import {
     nameof,
@@ -145,10 +150,16 @@ const useLogScale = ref(false);
 
 const options = computed(() => {
     const baseOptions = createOptions({
-        title_function: (items) => calcTitle(items, mode.value),
+        title_function: (items) => calcTitle(items, modeOf(mode.value, algoId.value === 'fsrs-7')),
         tooltip_function: calcTooltip,
     });
     const scaleOptions = useLogScale.value ? logarithmicScaleOptions : linearScaleOptions;
+    if (algoId.value === 'fsrs-7' && baseOptions.plugins?.zoom) {
+        baseOptions.plugins.zoom = {
+            ...baseOptions.plugins.zoom,
+            limits: { y: { min: useLogScale.value ? Number.MIN_VALUE : 0, minRange: 0 } },
+        };
+    }
 
     return {
         ...baseOptions,
@@ -157,7 +168,12 @@ const options = computed(() => {
         },
         scales: {
             ...baseOptions.scales,
-            y: scaleOptions,
+            y: algoId.value === 'fsrs-7' ? {
+                ...scaleOptions,
+                min: useLogScale.value ? undefined : 0,
+                max: undefined,
+                ticks: {},
+            } : scaleOptions,
         }
     };
 });
@@ -181,7 +197,6 @@ const fsrsParams = ref({
 });
 
 const currentAlgorithm = computed(() => algorithms[algoId.value] || defaultAlgorithm);
-const activeWeightsCount = computed(() => currentAlgorithm.value.defaultWeights.length);
 
 watch(() => route.query, (query) => {
     const rawW = query.w ? parseRawParameters(query.w as string) : [];
@@ -195,11 +210,23 @@ watch(() => route.query, (query) => {
     const m = query.m ? parseParameters(query.m as string, initialM) : [...initialM];
 
     algoId.value = algo.id;
-    fsrsParams.value.w = w;
+    fsrsParams.value.w = algo.clamp(w);
     fsrsParams.value.m = m;
 }, { immediate: true });
 
-const { commit, undo, redo, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrsParams, { clone: true });
+const { commit, undo, redo, clear, canUndo, canRedo, undoStack, redoStack } = useManualRefHistory(fsrsParams, { clone: true });
+
+watch(algoId, () => {
+    // Weight layouts differ between models, so parameter undo stays within one model.
+    commit();
+    clear();
+    if (algoId.value !== 'fsrs-7' && mode.value === 'stabilityFast') mode.value = 'stability';
+});
+
+function commitParameters() {
+    fsrsParams.value.w = currentAlgorithm.value.clamp(fsrsParams.value.w);
+    commit();
+}
 
 function onAlgorithmChange(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -213,19 +240,33 @@ function onAlgorithmChange(event: Event) {
     commit();
 }
 
-const data = computed<ChartData<'line', MyData[]>>(() => {
-    const params = {
-        weights: fsrsParams.value.w,
-        requestRetention: fsrsParams.value.m[0] ?? 0.9,
-    };
+const calculation = computed(() => {
+    try {
+        const params = {
+            weights: currentAlgorithm.value.clamp(fsrsParams.value.w),
+            requestRetention: fsrsParams.value.m[0] ?? 0.9,
+        };
+        const steps = createSteps(currentAlgorithm.value.scheduler(params));
+        return {
+            cards: reviews.value.map(review => steps(review)),
+            error: '',
+        };
+    } catch (error) {
+        return {
+            cards: [] as Card[][],
+            error: error instanceof Error ? error.message : String(error),
+        };
+    }
+});
 
+const data = computed<ChartData<'line', MyData[]>>(() => {
     return {
         labels: createLabels(reviews.value),
-        datasets: reviews.value.map(review => ({
+        datasets: reviews.value.map((review, index) => ({
             label: review.join(''),
             pointRadius: 4,
             pointHoverRadius: 5,
-            data: currentAlgorithm.value.steps(params, review).map(a => convertCardToMyData(a, review, mode.value)),
+            data: (calculation.value.cards[index] ?? []).map(a => convertCardToMyData(a, review, mode.value)),
         } as ChartDataset<'line', MyData[]>)),
     };
 });
@@ -248,12 +289,12 @@ const isDefaultM = computed(() => {
 watch([algoId, fsrsParams], ([newAlgoId, newState]) => {
     router.replace({
         query: {
-            a: newAlgoId !== defaultAlgorithm.id ? newAlgoId : undefined,
+            a: newAlgoId,
             w: isDefaultParameters.value ? undefined : paramsToString(newState.w, 4, ','),
             m: isDefaultM.value ? undefined : paramsToString(newState.m, 2, ','),
         }
     });
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 function reset(): void {
     fsrsParams.value.w = [...currentAlgorithm.value.defaultWeights];

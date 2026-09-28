@@ -23,8 +23,9 @@
     }
 
     & .slider-name {
-        white-space: nowrap;
-        width: 16em;
+        flex: 0 0 16em;
+        max-width: 100%;
+        overflow-wrap: anywhere;
     }
 
     & .slider-number {
@@ -39,7 +40,8 @@
         align-items: center;
 
         & .minmax {
-            width: 2.0em;
+            flex: 0 0 6ch;
+            white-space: nowrap;
             font-size: 0.85em;
             color: #888;
 
@@ -50,6 +52,7 @@
 
         & .slider-range-input {
             width: 100%;
+            margin: 0;
             background: transparent;
         }
     }

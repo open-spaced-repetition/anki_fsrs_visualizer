@@ -1,3 +1,5 @@
+import type { Grade } from 'ts-fsrs';
+
 export function parseParameters(value: string, defaultValue: readonly number[]): number[] {
     if (!value) {
         return [...defaultValue];
@@ -25,10 +27,10 @@ export function paramsToString(value: readonly number[], fixed = 4, sep = ', '):
     return value.map((f: number) => f.toFixed(fixed)).join(sep);
 }
 
-export function parseReviewsText(text: string): number[][] {
+export function parseReviewsText(text: string): Grade[][] {
     if (!text) return [];
     return text.split('\n')
-        .map(line => line.split('').filter(ch => ['1', '2', '3', '4'].includes(ch)).map(Number));
+        .map(line => line.split('').filter(ch => ['1', '2', '3', '4'].includes(ch)).map(ch => Number(ch) as Grade));
 }
 
 export function formatReviewsText(reviews: number[][]): string {

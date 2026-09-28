@@ -9,7 +9,7 @@
             <div class="minmax minmax-rt">
                 {{ props.info.min }}
             </div>
-            <div style="flex: 1;">
+            <div style="flex: 1; min-width: 0;">
                 <input class="slider-range-input" type="range" :step="props.info.step" v-model.number="model"
                     :min="props.info.min" :max="props.info.max" :disabled="props.disabled" @change="onChange" />
             </div>

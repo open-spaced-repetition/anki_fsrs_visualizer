@@ -15,10 +15,11 @@ export function nameof<T>(name: keyof T): keyof T {
     return name;
 }
 
-export function modeOf(modeKey: keyof Card): string {
+export function modeOf(modeKey: keyof Card, dualStability = false): string {
     const modeMap: { [key in keyof Card]?: string } = {
         interval: 'Ivl',
-        stability: 'S',
+        stability: dualStability ? 'SS' : 'S',
+        stabilityFast: 'SF',
         displayDifficulty: 'D',
         cumulativeInterval: 'CIvl'
     };
@@ -28,22 +29,26 @@ export function modeOf(modeKey: keyof Card): string {
 export function cardDataFormat(card: Card, modeKey: keyof Card): string {
     if (!card || card[modeKey] === undefined) return '-';
     if (modeKey === 'interval' || modeKey === 'cumulativeInterval') {
-        return Math.round(card[modeKey]).toString();
+        return card.stabilityFast === undefined ? Math.round(card[modeKey]).toString() : card[modeKey].toFixed(6);
     }
-    return card[modeKey].toFixed(2);
+    return card[modeKey]!.toFixed(modeKey === 'stabilityFast' ? 4 : 2);
 }
 
 export function calcTooltip(item: MyData): string {
     if (!item || !item.card) return '';
     const reviewText = item.review.join('');
     const gradeName = gradeNames[item.x] || 'Unknown';
-    const interval = Math.round(item.card.interval ?? 0).toString();
+    const interval = cardDataFormat(item.card, 'interval');
     const stability = (item.card.stability ?? 0).toFixed(2);
     const displayDifficulty = (item.card.displayDifficulty ?? 0).toFixed(0);
     const difficulty = (item.card.difficulty ?? 0).toFixed(2);
     const stateName = stateNames[item.card.state] || 'Unknown';
+    const { stabilityFast } = item.card;
+    const stabilityText = stabilityFast === undefined
+        ? `Stability: ${stability}`
+        : `Slow stability (SS): ${stability}, Fast stability (SF): ${stabilityFast.toFixed(4)}`;
 
-    return `${reviewText}: ${gradeName}, Interval: ${interval} Stability: ${stability}, Difficulty: ${displayDifficulty}% (${difficulty}), State: ${stateName}`;
+    return `${reviewText}: ${gradeName}, Interval: ${interval} ${stabilityText}, Difficulty: ${displayDifficulty}% (${difficulty}), State: ${stateName}`;
 }
 
 export function calcTitle(items: MyData[], mode: string): string {
@@ -55,15 +60,13 @@ export function calcTitle(items: MyData[], mode: string): string {
 export function getDataLabel(card: Card, mode: keyof Card): string {
     if (!card) return '';
     let details = '';
-    const val = card[mode];
-    const valNum = typeof val === 'number' ? val : 0;
 
-    if (mode === 'stability') {
-        details = `${(card.stability ?? 0).toFixed(2)}, ${(card.displayDifficulty ?? 0).toFixed(0)}%`;
+    if (mode === 'stability' || mode === 'stabilityFast') {
+        details = `${cardDataFormat(card, mode)}, ${(card.displayDifficulty ?? 0).toFixed(0)}%`;
     } else if (mode === 'displayDifficulty') {
         details = `${(card.displayDifficulty ?? 0).toFixed(2)}%, ${(card.difficulty ?? 0).toFixed(2)}`;
     } else {
-        details = `${Math.round(valNum).toString()}, ${(card.displayDifficulty ?? 0).toFixed(0)}%`;
+        details = `${cardDataFormat(card, mode)}, ${(card.displayDifficulty ?? 0).toFixed(0)}%`;
     }
     return `${gradeNames[card.grade] || ''} (${details})`;
 }

@@ -9,6 +9,7 @@ export class Card {
         public cumulativeInterval: number,
         public grade: Grade,
         public state: State,
+        public stabilityFast?: number,
     ) { }
 }
 
